@@ -1,0 +1,77 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="/libs/Semantic-UI/semantic.min.css"  media="screen,projection"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style type="text/css">
+        body {
+          background-color: #DADADA;
+        }
+        body > .grid {
+          height: 100%;
+        }
+        .image {
+          margin-top: -100px;
+        }
+        .column {
+          max-width: 450px;
+        }
+    </style>
+    <title>Sign Up</title>
+</head>
+<body>
+    <div class="ui middle aligned center aligned grid">
+        <div class="column">
+            <h2 class="ui teal image header">
+                <!-- <img src="/libs/Semantic-UI/assets/images/logo.png" class="image"> -->
+                <div class="content">
+                    Welcome
+                </div>
+            </h2>
+            <form id="form" class="ui large form" action="/signup" method="post">
+                <div class="ui stacked segment">
+                    <div class="field">
+                        <div class="ui left icon input">
+                            <i class="user icon"></i>
+                            <input type="text" name="email" placeholder="E-mail address">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="ui left icon input">
+                            <i class="user icon"></i>
+                            <input type="text" name="name" placeholder="Name">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="ui left icon input">
+                            <i class="lock icon"></i>
+                            <input type="password" name="password" placeholder="Password">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="ui left icon input">
+                            <i class="lock icon"></i>
+                            <input type="password" name="conPassword" placeholder="Confirm Password">
+                        </div>
+                    </div>
+                    <div id="btnSignup" class="ui fluid large teal submit button">Sign Up</div>
+                </div>
+                <div class="ui error message"></div>
+            </form>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+    <srcipt type="text/javascript" src="/libs/Semantic-UI/semantic.min.js"></srcipt>
+    <script>
+        $(document).ready(function() {
+            $("#btnSignup").on("click", function() {
+                $("#form").submit();
+            });
+        });
+    </script>
+</body>
+</html>
