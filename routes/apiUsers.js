@@ -12,7 +12,9 @@ router.get('/', function(req, res, next) {
 
 router.get('/:id', function(req, res, next) {
     let id = req.params.id;
-    logger.info("id: " + id);
+    //logger.info("id: " + id);
+
+    // 로그인 유저 정보
     if(id == "loginUser") {
         if(!req.user) {
             res.json(null);
