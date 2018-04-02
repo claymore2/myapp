@@ -5,6 +5,7 @@ const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const routes = require('./routes/routes');
+const apiUsers = require('./routes/apiUsers');
 const port = process.env.PORT || 3000;
 const bodyParser = require('body-parser');
 const session = require('express-session');
@@ -22,7 +23,7 @@ mongoose.connect(process.env.MONGO_URI)
     .catch(e => logger.error(e));
 
 // Static File Service
-app.use(express.static('public')); // app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 // Body-parser
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -46,6 +47,7 @@ app.use(passport.session()); // session 연결
 
 // Routes
 app.use('/', routes);
+app.use('/api/users', apiUsers);
 app.use((req, res, next) => { // 404 처리 부분
     res.status(404).send('일치하는 주소가 없습니다');
 });

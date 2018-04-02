@@ -4,30 +4,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link type="text/css" rel="stylesheet" href="/libs/Semantic-UI/semantic.min.css"  media="screen,projection"/>
+    <link type="text/css" rel="stylesheet" href="/libs/semantic/semantic.min.css"  media="screen,projection"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Index</title>
 </head>
 <body>
-    <div class="ui left demo vertical inverted sidebar labeled icon menu">
-        <a class="item">
-          <i class="home icon"></i>
-          Home
-        </a>
-        <a class="item">
-          <i class="block layout icon"></i>
-          Topics
-        </a>
-        <a class="item">
-          <i class="smile icon"></i>
-          Friends
-        </a>
+    <div class="ui container" style="margin-top: 60px;">
+        <div class="ui grid row">
+            <div class="four wide column">
+                <div class="ui card">
+                    <div class="content">
+                        <div class="header">List</div>
+                    </div>
+                    <div class="content" style="height:600px;padding:0;">
+                        <div class="ui divided selection list">
+                            <div class="item">
+                                <i class="large github middle aligned icon"></i>
+                                <div class="content">
+                                    <a class="header">Semantic-Org/Semantic-UI</a>
+                                    <div class="description">Updated 10 mins ago</div>
+                                </div>
+                            </div>
+                            <div class="item">
+                                <i class="large github middle aligned icon"></i>
+                                <div class="content">
+                                    <a class="header">Semantic-Org/Semantic-UI</a>
+                                    <div class="description">Updated 10 mins ago</div>
+                                </div>
+                            </div>
+                            <div class="item">
+                                <i class="large github middle aligned icon"></i>
+                                <div class="content">
+                                    <a class="header">Semantic-Org/Semantic-UI</a>
+                                    <div class="description">Updated 10 mins ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="twelve wide column">
+                <div class="ui card" style="width:100%;">
+                    <div class="content">
+                        <div class="header">Main</div>
+                    </div>
+                    <div class="content" style="height:600px;">
+                        <button id="btnAddUser" class="ui basic button">
+                            <i class="icon user"></i> Add Friend
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-        crossorigin="anonymous"></script>
-    <srcipt type="text/javascript" src="/libs/Semantic-UI/semantic.min.js"></srcipt>
+    <div id="userListModal" class="ui modal" style="width:400px;">
+        <div class="content">
+            <div class="ui search">
+                <div class="ui icon input" style="width:100%;">
+                    <input class="prompt" type="text" placeholder="Search...">
+                    <i class="search icon"></i>
+                </div>
+                <div class="results"></div>
+            </div>
+        </div>
+        <div class="scrolling content" style="height:400px;padding-top:0;">
+            <div class="ui middle selection list">
+                <div class="item">
+                    <img class="ui avatar image" src="/images/avatar/default.png">
+                    <div class="content">
+                        <a class="header">Helen</a>
+                        <div class="description">상태메시지</div>
+                    </div>
+                </div>                 
+            </div>
+        </div>
+        <div class="ui divider"></div>
+        <div class="scrolling content" style="height:100px;padding-top:0;">
+            <div class="ui labels">
+                <div class="ui image label">
+                    <img src="/images/avatar/default.png">lindsay <i class="icon close"></i>
+                </div>
+                <div class="ui image label">
+                    <img src="/images/avatar/default.png">lindsay <i class="icon close"></i>
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <div class="ui black deny button">Close</div>
+            <div class="ui primary right labeled icon button">
+                OK
+                <i class="checkmark icon"></i>
+            </div>
+        </div>
+    </div>
+    <script src="/libs/jquery/jquery-3.3.1.min.js"></script>
+    <script src="/libs/semantic/semantic.min.js"></script>
     <script>
-        
+        (function($) {
+            $.getUserList = function() {
+                $.ajax({
+                    url: "/api/users",
+                    method: "GET",
+                    data: {},
+                    success: function(data) {
+                        console.log(data);
+                    },
+                    error: function(err) {
+                        console.log(err);
+                    }
+                });
+            }
+        })(jQuery);
+
+        $(document).ready(function() {
+            $.getUserList();
+
+            $("#btnAddUser").on("click", function() {
+                $("#userListModal").modal('show');
+            });
+        });
     </script>
 </body>
 </html>
