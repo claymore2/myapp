@@ -31,9 +31,8 @@
                     Log-in to your account
                 </div>
             </h2>
-            <form id="form" class="ui large form" action="/login" method="post">
+            <form id="form" class="ui large form">
                 <div class="ui stacked segment">
-                    <%- message %> 
                     <div class="field">
                         <div class="ui left icon input">
                             <i class="user icon"></i>
@@ -62,7 +61,24 @@
     <script>
         $(document).ready(function() {
             $("#btnLogin").on("click", function() {
-                $("#form").submit();
+                var formData = $("#form").serialize();
+                $.ajax({
+                    url: "/api/login",
+                    method: "POST",
+                    data: formData,
+                    success: function(data) {
+                        if(data.result == "success") {
+                            //alert("로그인 성공");
+                            location.href = "/";
+                        } else {
+                            if(data.msg) alert(data.msg);
+                            return;
+                        }
+                    },
+                    error: function(err) {
+                        console.log(err);
+                    }
+                });
             });
         });
     </script>

@@ -1,13 +1,16 @@
 const LocalStrategy = require('passport-local').Strategy;
 const User = require('../models/users');
+//const uuidv4 = require('uuid/v4');
 
 module.exports = (passport) => {
     passport.serializeUser((user, done) => {
-        done(null, user.id); // req.session.passport.user.id에 저장
+        //console.log('serializeUser');
+        done(null, user.email); // 인증 성공 시 session 에 저장
     });
 
-    passport.deserializeUser((id, done) => {
-        User.findById(id, (err,user) => {
+    passport.deserializeUser((email, done) => {
+        User.findOne({'email': email}, (err,user) => {
+            //console.log('deserializeUser');
             done(err, user);
         });
     });
@@ -21,15 +24,19 @@ module.exports = (passport) => {
         User.findOne({'email': email}, (err, user) => {
             if(err) return done(err);
             if(user) {
-                return done(null, false, req.flash('message','이메일이 존재합니다.'));
-                //return done(null, false, { message : '이메일이 존재합니다.'});
+                //return done(null, false, req.flash('message','이메일이 존재합니다.'));
+                return done(null, false, {msg : '이메일이 존재합니다.'});
             } else {
                 var newUser = new User();
+                //var _id = "ObjectId:(\"" + uuidv4() + "\")";
+                //newUser._id = _id;
+                //newUser.uid = _id;
                 newUser.email = email;
                 newUser.password = newUser.generateHash(password);
                 newUser.name = req.body.name;
+
                 newUser.save((err) => {
-                    if(err) throw err;
+                    if(err) done(err);
                     return done(null, newUser);
                 });
             }
@@ -45,10 +52,10 @@ module.exports = (passport) => {
         User.findOne({'email': email}, (err, user) => {
             if(err) return done(err);
             if(!user) {
-                return done(null, false, req.flash('message','존재하지 않는 이메일입니다.'));
+                return done(null, false, {msg : '존재하지 않는 이메일입니다.'});
             } 
             if(!user.validPassword(password)) {
-                return done(null, false, req.flash('message','비밀번호가 맞지 않습니다.'));
+                return done(null, false, {msg : '비밀번호가 맞지 않습니다.'});
             }
             
             return done(null, user);
