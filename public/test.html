@@ -112,44 +112,15 @@
     </div>
     <script src="/libs/jquery/jquery-3.3.1.min.js"></script>
     <script src="/libs/semantic/semantic.min.js"></script>
+    <script src="/js/restApi.js"></script>
     <script>
         let seletedUsers = [];
-
-        (function($) {
-            $.getUserInfo = function(id, callback) {
-                $.ajax({
-                    url: "/api/users/"+id,
-                    method: "GET",
-                    data: {},
-                    success: function(data) {
-                        callback(data);
-                    },
-                    error: function(err) {
-                        console.log(err);
-                    }
-                });
-            }
-
-            $.getUserList = function(callback) {
-                $.ajax({
-                    url: "/api/users",
-                    method: "GET",
-                    data: {},
-                    success: function(data) {
-                        callback(data);
-                    },
-                    error: function(err) {
-                        console.log(err);
-                    }
-                });
-            }
-        })(jQuery);
 
         function getMyInfo() {
             let $myInfoCard = $("#myInfoCard");
             let html = '';
             
-            $.getUserInfo("loginUser", function(data) {
+            apiUsers.info("loginUser", function(data) {
                 //console.log(data);
                 if(data) {
                     html += '<div class="content">';
@@ -161,10 +132,10 @@
                     html += '<div id="btnSettings" class="ui bottom attached button">';
                     html +=     '<i class="settings icon"></i> Settings';
                     html += '</div>';
-                }
 
-                $myInfoCard.empty();
-                $myInfoCard.append(html);
+                    $myInfoCard.empty();
+                    $myInfoCard.append(html);
+                }
             });
         }
 
@@ -173,7 +144,7 @@
             let $userList = $("#userList");
             let html = '';
             
-            $.getUserList(function(data) {
+            apiUsers.list(function(data) {
                 $.each(data, function(i, item) {
                     //console.log(item);
                     html += '<div class="item" data-uid="'+item._id+'" onclick="addSelectedUser(this);">';
