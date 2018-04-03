@@ -5,6 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="/libs/semantic/semantic.min.css"  media="screen,projection"/>
+    <!-- <link type="text/css" rel="stylesheet" href="/libs/jquery-scrollbar/jquery.scrollbar.css" /> -->
+    <link type="text/css" rel="stylesheet" href="/css/common.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Index</title>
 </head>
@@ -12,11 +14,22 @@
     <div class="ui container" style="margin-top: 60px;">
         <div class="ui grid row">
             <div class="four wide column">
+                <div id="myInfoCard" class="ui card">
+                    <div class="content">
+                        <img class="right floated mini ui image" src="/images/avatar/default.png">
+                        <div class="header">MyInfo</div>
+                        <div class="meta">이메일...</div>
+                        <div class="description">상태메시지</div>
+                    </div>
+                    <div id="btnSettings" class="ui bottom attached button">
+                        <i class="settings icon"></i> Settings
+                    </div>
+                </div>
                 <div class="ui card">
                     <div class="content">
                         <div class="header">List</div>
                     </div>
-                    <div class="content" style="height:600px;padding:0;">
+                    <div class="content" style="height:460px;padding:0;">
                         <div class="ui divided selection list">
                             <div class="item">
                                 <i class="large github middle aligned icon"></i>
@@ -49,9 +62,17 @@
                         <div class="header">Main</div>
                     </div>
                     <div class="content" style="height:600px;">
-                        <button id="btnAddUser" class="ui basic button">
-                            <i class="icon user"></i> Add Friend
-                        </button>
+                        <div class="top" style="float:right;"></div>
+                        <div class="floater" style="float:left;height:30%;"></div>
+                        <div style="clear:both;text-align:center;">
+                            <h2 class="ui center aligned icon header">
+                                <i class="circular users icon"></i>
+                                Start new chat
+                            </h2>
+                            <button id="btnAddUser" class="ui basic button">
+                                <i class="icon user"></i> Select Friends
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -68,7 +89,7 @@
             </div>
         </div>
         <div class="scrolling content" style="height:400px;padding-top:0;">
-            <div class="ui middle selection list">
+            <div id="userList" class="ui middle selection list">
                 <div class="item">
                     <img class="ui avatar image" src="/images/avatar/default.png">
                     <div class="content">
@@ -80,18 +101,11 @@
         </div>
         <div class="ui divider"></div>
         <div class="scrolling content" style="height:100px;padding-top:0;">
-            <div class="ui labels">
-                <div class="ui image label">
-                    <img src="/images/avatar/default.png">lindsay <i class="icon close"></i>
-                </div>
-                <div class="ui image label">
-                    <img src="/images/avatar/default.png">lindsay <i class="icon close"></i>
-                </div>
-            </div>
+            <div id="selectedUserLabels" class="ui labels"></div>
         </div>
         <div class="actions">
-            <div class="ui black deny button">Close</div>
-            <div class="ui primary right labeled icon button">
+            <div class="ui black cancel button">Close</div>
+            <div class="ui primary approve right labeled icon button">
                 OK
                 <i class="checkmark icon"></i>
             </div>
@@ -99,28 +113,100 @@
     </div>
     <script src="/libs/jquery/jquery-3.3.1.min.js"></script>
     <script src="/libs/semantic/semantic.min.js"></script>
+    <!-- <script src="/libs/jquery-scrollbar/jquery.scrollbar.min.js"></script> -->
+    <script src="/js/restApi.js"></script>
     <script>
-        (function($) {
-            $.getUserList = function() {
-                $.ajax({
-                    url: "/api/users",
-                    method: "GET",
-                    data: {},
-                    success: function(data) {
-                        console.log(data);
-                    },
-                    error: function(err) {
-                        console.log(err);
-                    }
+        let seletedUsers = [];
+        let $modal = $("#userListModal");
+        let $userList = $("#userList");
+        let $selectedUserLabels = $("#selectedUserLabels");
+
+        function getMyInfo() {
+            let $myInfoCard = $("#myInfoCard");
+            let html = '';
+            
+            apiUsers.info("loginUser", function(data) {
+                //console.log(data);
+                if(data) {
+                    html += '<div class="content">';
+                    html +=     '<img class="right floated mini ui image" src="/images/avatar/default.png">';                       
+                    html +=     '<div class="header">'+data.name+'</div>';
+                    html +=     '<div class="meta">'+data.email+'</div>';
+                    html +=     '<div class="description">상태메시지</div>';
+                    html += '</div>';
+                    html += '<div id="btnSettings" class="ui bottom attached button">';
+                    html +=     '<i class="settings icon"></i> Settings';
+                    html += '</div>';
+
+                    $myInfoCard.empty();
+                    $myInfoCard.append(html);
+                }
+            });
+        }
+
+        function openUserListModal() {
+            let html = '';
+            
+            apiUsers.list(function(data) {
+                $.each(data, function(i, item) {
+                    //console.log(item);
+                    html += '<div class="item" data-uid="'+item._id+'" onclick="addSelectedUser(this);">';
+                    html +=     '<img class="ui avatar image" src="/images/avatar/default.png">';                       
+                    html +=     '<div class="content">';
+                    html +=         '<a class="header name">'+item.name+'</a>';
+                    html +=         '<div class="description">상태메시지</div>';
+                    html +=     '</div>';
+                    html += '</div>';
+                });
+
+                $userList.empty();
+                $userList.append(html);
+                $modal.modal('show');
+            });
+        }
+
+        function addSelectedUser(obj) {
+            let uid = $(obj).data('uid');
+            let name = $(obj).find('.name').text();
+            let avatar = $(obj).find('.avatar').attr('src');
+            
+            if(seletedUsers.indexOf(uid) < 0) {
+                let html = '';
+                html += '<div class="ui image label" style="margin:3px;">';
+                html +=     '<img src="'+avatar+'">'+name+' <i class="icon close"></i>';                       
+                html += '</div>';
+
+                let $new = $(html);
+                //$(obj).hide('normal');
+                //$(obj).hide('normal').remove();
+                $new.hide().appendTo($selectedUserLabels).fadeIn('fast');
+                seletedUsers.push(uid);
+                //console.log("added:", seletedUsers); 
+
+                // Delete Event
+                $new.find(".icon.close").on("click", function() {
+                    //$(obj).show('normal');
+                    //$(obj).appendTo($userList).show('normal');
+                    $new.hide('normal').remove();
+                    seletedUsers = seletedUsers.filter(function(item) { 
+                        return item !== uid;
+                    });
+                    //console.log("deleted:", seletedUsers);
                 });
             }
-        })(jQuery);
+        }
 
         $(document).ready(function() {
-            $.getUserList();
+            getMyInfo();
+
+            $modal.modal({
+                onApprove : function() {
+                    alert('Approved!');
+                }
+            });
 
             $("#btnAddUser").on("click", function() {
-                $("#userListModal").modal('show');
+                openUserListModal();
             });
         });
     </script>
