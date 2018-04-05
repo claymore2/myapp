@@ -5,7 +5,6 @@ const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const routes = require('./routes/routes');
-const restUsers = require('./routes/restUsers');
 const port = process.env.PORT || 3000;
 const bodyParser = require('body-parser');
 const session = require('express-session');
@@ -47,7 +46,9 @@ app.use(passport.session()); // session 연결
 
 // Routes
 app.use('/', routes);
-app.use('/api/users', restUsers);
+app.use('/api/users', require('./routes/restUsers'));
+app.use('/api/rooms', require('./routes/restRooms'));
+
 app.use((req, res, next) => { // 404 처리 부분
     res.status(404).send('일치하는 주소가 없습니다');
 });

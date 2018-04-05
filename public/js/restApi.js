@@ -1,4 +1,4 @@
-let apiUsers;
+var apiUsers, apiRooms;
 
 apiUsers = (function($) {
     return {
@@ -20,6 +20,24 @@ apiUsers = (function($) {
                 url: "/api/users",
                 method: "GET",
                 data: {},
+                success: function(data) {
+                    callback(data);
+                },
+                error: function(err) {
+                    console.log(err);
+                }
+            });
+        }
+    }
+})(jQuery);
+
+apiRooms = (function($) {
+    return {
+        save : function(params, callback) {
+            $.ajax({
+                url: "/api/rooms",
+                method: "POST",
+                data: params,
                 success: function(data) {
                     callback(data);
                 },

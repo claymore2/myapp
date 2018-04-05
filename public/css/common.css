@@ -4,3 +4,19 @@ html, body {
     height: 100%;
 }
 
+
+/* 채팅 룸 */
+#messagesWrapper {height:600px}
+#messages {max-width:100%}
+#messages .chatInfo {text-align:center}
+
+/* 채팅 메시지 */
+#messages .chatBox {min-height:110px;position:relative}
+#messages .chatBox .chatInner {position:absolute}
+#messages .chatBox .chatInner.fromOther {left:0}
+#messages .chatBox .chatInner.fromMe {right:0;text-align:right}
+
+#messages .chatBox .chatInner .avatar > img {height:auto;}
+#messages .chatBox .chatInner .chatMessage {width:250px;border-radius:20px;}
+#messages .chatBox .chatInner.fromOther .chatMessage {border-top-left-radius:5px;}
+#messages .chatBox .chatInner.fromMe .chatMessage {border-top-right-radius:5px;}

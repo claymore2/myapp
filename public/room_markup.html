@@ -5,8 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="/libs/semantic/semantic.min.css"  media="screen,projection"/>
-    <!-- <link type="text/css" rel="stylesheet" href="/libs/jquery-scrollbar/jquery.scrollbar.css" /> -->
-    <link type="text/css" rel="stylesheet" href="/css/common.css" />
+    <link type="text/css" rel="stylesheet" href="/libs/jquery-scrollbar/jquery.mCustomScrollbar.min.css"  media="screen,projection"/>
+    <link type="text/css" rel="stylesheet" href="/css/common.css"  media="screen,projection"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Index</title>
 </head>
@@ -59,20 +59,7 @@
             <div class="twelve wide column">
                 <div class="ui card" style="width:100%;">
                     <div class="content">
-                        <div class="header">Main</div>
-                    </div>
-                    <div id="newChatContainer" class="content" style="height:600px;">
-                        <div class="top" style="float:right;"></div>
-                        <div class="floater" style="float:left;height:30%;"></div>
-                        <div style="clear:both;text-align:center;">
-                            <h2 class="ui center aligned icon header">
-                                <i class="circular users icon"></i>
-                                Start new chat
-                            </h2>
-                            <button id="btnAddUser" class="ui basic button">
-                                <i class="icon user"></i> Select Friends
-                            </button>
-                        </div>
+                        <div class="header">Chat</div>
                     </div>
                     <div id="messagesWrapper" class="content">
                         <div id="messages" class="ui comments"></div>
@@ -107,8 +94,8 @@
             <div id="selectedUserLabels" class="ui labels"></div>
         </div>
         <div class="actions">
-            <div class="ui black cancel button">Close</div>
-            <div class="ui primary approve right labeled icon button">
+            <div class="ui black deny button">Close</div>
+            <div class="ui primary right labeled icon button">
                 OK
                 <i class="checkmark icon"></i>
             </div>
@@ -116,14 +103,10 @@
     </div>
     <script src="/libs/jquery/jquery-3.3.1.min.js"></script>
     <script src="/libs/semantic/semantic.min.js"></script>
-    <!-- <script src="/libs/jquery-scrollbar/jquery.scrollbar.min.js"></script> -->
+    <script src="/libs/jquery-scrollbar/jquery.mCustomScrollbar.concat.min.js"></script>
     <script src="/js/restApi.js"></script>
     <script>
-        let selectedUsers = [];
-        let $modal = $("#userListModal");
-        let $userList = $("#userList");
-        let $selectedUserLabels = $("#selectedUserLabels");
-        var myInfo = {};
+        let seletedUsers = [];
 
         function getMyInfo() {
             let $myInfoCard = $("#myInfoCard");
@@ -132,8 +115,6 @@
             apiUsers.info("loginUser", function(data) {
                 //console.log(data);
                 if(data) {
-                    myInfo._id = data._id;
-
                     html += '<div class="content">';
                     html +=     '<img class="right floated mini ui image" src="/images/avatar/default.png">';                       
                     html +=     '<div class="header">'+data.name+'</div>';
@@ -151,19 +132,20 @@
         }
 
         function openUserListModal() {
+            let $modal = $("#userListModal");
+            let $userList = $("#userList");
             let html = '';
             
             apiUsers.list(function(data) {
                 $.each(data, function(i, item) {
-                    if(myInfo._id != item._id) {
-                        html += '<div class="item" data-uid="'+item._id+'" onclick="addSelectedUser(this);">';
-                        html +=     '<img class="ui avatar image" src="/images/avatar/default.png">';                       
-                        html +=     '<div class="content">';
-                        html +=         '<a class="header name">'+item.name+'</a>';
-                        html +=         '<div class="description">상태메시지</div>';
-                        html +=     '</div>';
-                        html += '</div>';
-                    }
+                    //console.log(item);
+                    html += '<div class="item" data-uid="'+item._id+'" onclick="addSelectedUser(this);">';
+                    html +=     '<img class="ui avatar image" src="/images/avatar/default.png">';                       
+                    html +=     '<div class="content">';
+                    html +=         '<a class="header name">'+item.name+'</a>';
+                    html +=         '<div class="description">상태메시지</div>';
+                    html +=     '</div>';
+                    html += '</div>';
                 });
 
                 $userList.empty();
@@ -173,57 +155,86 @@
         }
 
         function addSelectedUser(obj) {
+            let $selectedUserLabels = $("#selectedUserLabels");
+            let $userList = $("#userList");
             let uid = $(obj).data('uid');
             let name = $(obj).find('.name').text();
             let avatar = $(obj).find('.avatar').attr('src');
-            
-            if(selectedUsers.indexOf(uid) < 0) {
-                let html = '';
-                html += '<div class="ui image label" style="margin:3px;">';
-                html +=     '<img src="'+avatar+'">'+name+' <i class="icon close"></i>';                       
-                html += '</div>';
 
-                let $new = $(html);
-                //$(obj).hide('normal');
-                //$(obj).hide('normal').remove();
-                $new.hide().appendTo($selectedUserLabels).fadeIn('fast');
-                selectedUsers.push({
-                    _id : uid
-                });
-                //console.log("added:", selectedUsers); 
+            let html = '';
+            html += '<div class="ui image label" style="margin:3px;">';
+            html +=     '<img src="'+avatar+'">'+name+' <i class="icon close"></i>';                       
+            html += '</div>';
 
-                // Delete Event
-                $new.find(".icon.close").on("click", function() {
-                    //$(obj).show('normal');
-                    //$(obj).appendTo($userList).show('normal');
-                    $new.hide('normal').remove();
-                    selectedUsers = selectedUsers.filter(function(item) { 
-                        return item._id !== uid;
-                    });
-                    //console.log("deleted:", selectedUsers);
+            let $new = $(html);
+            $(obj).hide('normal');
+            //$(obj).hide('normal').remove();
+            $new.hide().appendTo($selectedUserLabels).fadeIn('fast');
+            seletedUsers.push(uid);
+            //console.log("added:", seletedUsers); 
+
+            // Delete Event
+            $new.find(".icon.close").on("click", function() {
+                $(obj).show('normal');
+                //$(obj).appendTo($userList).show('normal');
+                $new.remove();
+                seletedUsers = seletedUsers.filter(function(item) { 
+                    return item !== uid;
                 });
-            }
+                //console.log("deleted:", seletedUsers);
+            });
         }
 
-        function inviteUsers() {
-            var params = {};
+        function createMessage() {
+            var info = '';
+            info += '<div class="ui mini message chatInfo">님이 초대하셨습니다.</div>';
 
-            if(selectedUsers.length > 0) {
-                params.selectedUsers = selectedUsers;
+            for(var i=0; i<20; i++) {
+                var html = '';
+                var from = '';
 
-                apiRooms.save(params, function(data) {
-                    console.log(data);
-                });
+                if(i%2 == 0) {
+                    from = 'fromMe';
+                } else {
+                    from = 'fromOther';
+                }
+                
+                html += '<div class="chatBox">';
+                html += '<div class="comment chatInner">';
+                //html +=     '<a class="avatar"><img src="/images/avatar/default.png"></a>';
+                html +=     '<div class="content">';
+                //html +=         '<a class="author">Matt</a>';
+                html +=         '<div class="metadata"><span class="date">Today at 5:42PM</span></div>';
+                html +=         '<div class="ui message chatMessage"></div>';
+                //html +=         '<div class="actions"><a class="reply">Reply</a></div>';
+                html +=     '</div>';
+                html += '</div>';
+                html += '</div>';
+                
+                var $chat = $(html);
+                $chat.find(".chatInner").addClass(from);
+                if(from == 'fromOther') {
+                    $chat.find(".chatInner").prepend('<a class="avatar"><img src="/images/avatar/default.png"></a>');
+                    $chat.find(".chatInner .content").prepend('<a class="author">Matt</a>');
+                    $chat.find(".chatInner .chatMessage").addClass('blue');
+                } else {
+                    $chat.find(".chatInner .chatMessage").addClass('green');
+                }
+
+                $("#messages").prepend($chat);
             }
+
+            $("#messages").prepend(info);
         }
 
         $(document).ready(function() {
             getMyInfo();
+            
+            createMessage();
 
-            $modal.modal({
-                onApprove : function() {
-                    inviteUsers();
-                }
+            // Scrollbar
+            $("#messagesWrapper").mCustomScrollbar({
+                theme: "dark"
             });
 
             $("#btnAddUser").on("click", function() {
