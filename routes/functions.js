@@ -19,8 +19,17 @@ var fnDb = {
 // Projection
 var simpleUserInfoProjection = {
     _id: true,
-    email: true,
-    name: true
+    EMAIL: true,
+    NAME: true
+}
+
+// 로그인 여부 체크
+var isLoggedIn = function (req, res, next) {
+    if (req.isAuthenticated()){
+        return next();
+    } else {
+        res.redirect('/login');
+    }
 }
 
 //값이 있는지 체크
@@ -32,8 +41,14 @@ var isEmpty = function (value) {
     }
 }
 
+var getCurrentDate = function() {
+    return new Date().getTime();
+}
+
 
 module.exports = {
     fnDb: fnDb,
-    isEmpty: isEmpty
+    isLoggedIn: isLoggedIn,
+    isEmpty: isEmpty,
+    getCurrentDate: getCurrentDate
 }

@@ -3,15 +3,18 @@ const logger = require('../config/logger');
 const User = require('../models/users');
 const fn = require('../routes/functions');
 
-router.get('/', function(req, res, next) {
+router.get('/api/users', function(req, res, next) {
     User.find({}, (err, users) => {
-        if(err) logger.error('error', err);
+        if (err) {
+            logger.error(err);
+            res.json({error: err});
+        }
         //logger.info(users);
         res.json(users);
     });
 });
 
-router.get('/:id', function(req, res, next) {
+router.get('/api/users/:id', function(req, res, next) {
     let id = req.params.id;
     //logger.info("id: " + id);
 

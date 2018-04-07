@@ -5,13 +5,13 @@ const User = require('../models/users');
 module.exports = (passport) => {
     passport.serializeUser((user, done) => {
         //console.log('serializeUser');
-        done(null, user.email); // 인증 성공 시 session 에 저장
+        done(null, user.EMAIL); // 인증 성공 시 session 에 저장
     });
 
     passport.deserializeUser((email, done) => {
-        User.findOne({'email': email}, (err,user) => {
+        User.findOne({'EMAIL': email}, (err,user) => {
             //console.log('deserializeUser');
-            done(err, user);
+            done(err, user._id);
         });
     });
 
@@ -21,7 +21,7 @@ module.exports = (passport) => {
         session: true,
         passReqToCallback: true // callback 에서 req 사용 시
     }, (req, email, password, done) => {
-        User.findOne({'email': email}, (err, user) => {
+        User.findOne({'EMAIL': email}, (err, user) => {
             if(err) return done(err);
             if(user) {
                 //return done(null, false, req.flash('message','이메일이 존재합니다.'));
@@ -31,9 +31,9 @@ module.exports = (passport) => {
                 //var _id = "ObjectId:(\"" + uuidv4() + "\")";
                 //newUser._id = _id;
                 //newUser.uid = _id;
-                newUser.email = email;
-                newUser.password = newUser.generateHash(password);
-                newUser.name = req.body.name;
+                newUser.EMAIL = email;
+                newUser.PASSWORD = newUser.generateHash(password);
+                newUser.NAME = req.body.name;
 
                 newUser.save((err) => {
                     if(err) done(err);
@@ -49,7 +49,7 @@ module.exports = (passport) => {
         session: true,
         passReqToCallback: true
     }, (req, email, password, done) => {
-        User.findOne({'email': email}, (err, user) => {
+        User.findOne({'EMAIL': email}, (err, user) => {
             if(err) return done(err);
             if(!user) {
                 return done(null, false, {msg : '존재하지 않는 이메일입니다.'});

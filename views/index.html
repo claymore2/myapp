@@ -133,11 +133,12 @@
                 //console.log(data);
                 if(data) {
                     myInfo._id = data._id;
+                    myInfo.name = data.NAME;
 
                     html += '<div class="content">';
                     html +=     '<img class="right floated mini ui image" src="/images/avatar/default.png">';                       
-                    html +=     '<div class="header">'+data.name+'</div>';
-                    html +=     '<div class="meta">'+data.email+'</div>';
+                    html +=     '<div class="header">'+data.NAME+'</div>';
+                    html +=     '<div class="meta">'+data.EMAIL+'</div>';
                     html +=     '<div class="description">상태메시지</div>';
                     html += '</div>';
                     html += '<div id="btnSettings" class="ui bottom attached button">';
@@ -159,7 +160,7 @@
                         html += '<div class="item" data-uid="'+item._id+'" onclick="addSelectedUser(this);">';
                         html +=     '<img class="ui avatar image" src="/images/avatar/default.png">';                       
                         html +=     '<div class="content">';
-                        html +=         '<a class="header name">'+item.name+'</a>';
+                        html +=         '<a class="header name">'+item.NAME+'</a>';
                         html +=         '<div class="description">상태메시지</div>';
                         html +=     '</div>';
                         html += '</div>';

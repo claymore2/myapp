@@ -45,9 +45,9 @@ app.use(passport.session()); // session 연결
 //app.use(flash());
 
 // Routes
-app.use('/', routes);
-app.use('/api/users', require('./routes/restUsers'));
-app.use('/api/rooms', require('./routes/restRooms'));
+app.use(routes);
+app.use(require('./routes/restUsers'));
+app.use(require('./routes/restRooms'));
 
 app.use((req, res, next) => { // 404 처리 부분
     res.status(404).send('일치하는 주소가 없습니다');
