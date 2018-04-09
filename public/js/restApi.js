@@ -1,50 +1,37 @@
 var apiUsers, apiRooms;
 
+function callAjax(url, method, params, callback) {
+    $.ajax({
+        url: url,
+        method: method,
+        data: params,
+        success: function(data) {
+            callback(data);
+        },
+        error: function(err) {
+            console.log(err);
+        }
+    });
+}
+
 apiUsers = (function($) {
     return {
         info : function(id, callback) {
-            $.ajax({
-                url: "/api/users/"+id,
-                method: "GET",
-                data: {},
-                success: function(data) {
-                    callback(data);
-                },
-                error: function(err) {
-                    console.log(err);
-                }
-            });
+            callAjax("/api/users/"+id, "GET", {}, callback);
         },
         list : function(callback) {
-            $.ajax({
-                url: "/api/users",
-                method: "GET",
-                data: {},
-                success: function(data) {
-                    callback(data);
-                },
-                error: function(err) {
-                    console.log(err);
-                }
-            });
+            callAjax("/api/users", "GET", {}, callback);
         }
     }
 })(jQuery);
 
 apiRooms = (function($) {
     return {
+        list : function(callback) {
+            callAjax("/api/rooms", "GET", {}, callback);
+        },
         save : function(params, callback) {
-            $.ajax({
-                url: "/api/rooms",
-                method: "POST",
-                data: params,
-                success: function(data) {
-                    callback(data);
-                },
-                error: function(err) {
-                    console.log(err);
-                }
-            });
+            callAjax("/api/rooms", "POST", params, callback);
         }
     }
 })(jQuery);

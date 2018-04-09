@@ -11,7 +11,7 @@ module.exports = (passport) => {
     passport.deserializeUser((email, done) => {
         User.findOne({'EMAIL': email}, (err,user) => {
             //console.log('deserializeUser');
-            done(err, user._id);
+            done(err, user); // session 에서 받아와서 req 에 set
         });
     });
 

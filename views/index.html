@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="/libs/semantic/semantic.min.css"  media="screen,projection"/>
-    <!-- <link type="text/css" rel="stylesheet" href="/libs/jquery-scrollbar/jquery.scrollbar.css" /> -->
+    <link type="text/css" rel="stylesheet" href="/libs/jquery-scrollbar/jquery.mCustomScrollbar.min.css"  media="screen,projection"/>
     <link type="text/css" rel="stylesheet" href="/css/common.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Index</title>
@@ -14,44 +14,36 @@
     <div class="ui container" style="margin-top: 60px;">
         <div class="ui grid row">
             <div class="four wide column">
+                <!-- 내 정보 -->
                 <div id="myInfoCard" class="ui card">
                     <div class="content">
-                        <img class="right floated mini ui image" src="/images/avatar/default.png">
-                        <div class="header">MyInfo</div>
-                        <div class="meta">이메일...</div>
+                        <img class="right floated ui avatar image" src="/images/avatar/default.png">
+                        <div class="header">Name</div>
+                        <div class="meta">Email</div>
                         <div class="description">상태메시지</div>
                     </div>
                     <div id="btnSettings" class="ui bottom attached button">
                         <i class="settings icon"></i> Settings
                     </div>
                 </div>
+                <!-- 채팅방 리스트 -->
                 <div class="ui card">
                     <div class="content">
                         <div class="header">List</div>
                     </div>
-                    <div class="content" style="height:460px;padding:0;">
-                        <div class="ui divided selection list">
-                            <div class="item">
-                                <i class="large github middle aligned icon"></i>
-                                <div class="content">
-                                    <a class="header">Semantic-Org/Semantic-UI</a>
-                                    <div class="description">Updated 10 mins ago</div>
+                    <div class="content customScroll" style="height:460px;padding:0;">
+                        <div id="roomList" class="ui divided selection list">
+                            <!-- <div class="item">
+                                <span class="ui right floated">18.04.08</span>
+                                <div class="content" style="width:100%;">
+                                    <img class="ui left floated avatar image" src="/images/avatar/default.png">
+                                    <a class="header">Header (5)</a>
+                                    <div class="description">
+                                        <a class="ui right floated red circular small label">2</a>
+                                        <span>Description</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="item">
-                                <i class="large github middle aligned icon"></i>
-                                <div class="content">
-                                    <a class="header">Semantic-Org/Semantic-UI</a>
-                                    <div class="description">Updated 10 mins ago</div>
-                                </div>
-                            </div>
-                            <div class="item">
-                                <i class="large github middle aligned icon"></i>
-                                <div class="content">
-                                    <a class="header">Semantic-Org/Semantic-UI</a>
-                                    <div class="description">Updated 10 mins ago</div>
-                                </div>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>
@@ -61,6 +53,7 @@
                     <div class="content">
                         <div class="header">Main</div>
                     </div>
+                    <!-- 채팅방 생성하기 -->
                     <div id="newChatContainer" class="content" style="height:600px;">
                         <div class="top" style="float:right;"></div>
                         <div class="floater" style="float:left;height:30%;"></div>
@@ -74,13 +67,16 @@
                             </button>
                         </div>
                     </div>
-                    <div id="messagesWrapper" class="content">
+                    <!-- 채팅방 -->
+                    <div id="messagesWrapper" class="content customScroll" style="display: none;">
                         <div id="messages" class="ui comments"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- 유저 선택 창 -->
     <div id="userListModal" class="ui modal" style="width:400px;">
         <div class="content">
             <div class="ui search">
@@ -116,18 +112,22 @@
     </div>
     <script src="/libs/jquery/jquery-3.3.1.min.js"></script>
     <script src="/libs/semantic/semantic.min.js"></script>
-    <!-- <script src="/libs/jquery-scrollbar/jquery.scrollbar.min.js"></script> -->
+    <script src="/libs/moment/moment.js"></script>
+    <script src="/libs/jquery-scrollbar/jquery.mCustomScrollbar.concat.min.js"></script>
+    <script src="/js/common.js"></script>
     <script src="/js/restApi.js"></script>
     <script>
-        let selectedUsers = [];
-        let $modal = $("#userListModal");
-        let $userList = $("#userList");
-        let $selectedUserLabels = $("#selectedUserLabels");
+        var selectedUsers = [];
+        var $roomList = $("#roomList");
+        var $modal = $("#userListModal");
+        var $userList = $("#userList");
+        var $selectedUserLabels = $("#selectedUserLabels");
+        var $messagesWrapper = $("#messagesWrapper");
         var myInfo = {};
 
         function getMyInfo() {
-            let $myInfoCard = $("#myInfoCard");
-            let html = '';
+            var $myInfoCard = $("#myInfoCard");
+            var html = '';
             
             apiUsers.info("loginUser", function(data) {
                 //console.log(data);
@@ -136,9 +136,9 @@
                     myInfo.name = data.NAME;
 
                     html += '<div class="content">';
-                    html +=     '<img class="right floated mini ui image" src="/images/avatar/default.png">';                       
-                    html +=     '<div class="header">'+data.NAME+'</div>';
-                    html +=     '<div class="meta">'+data.EMAIL+'</div>';
+                    html +=     '<img class="right floated ui avatar image" src="/images/avatar/default.png">';                       
+                    html +=     '<div class="header">'+data['NAME']+'</div>';
+                    html +=     '<div class="meta">'+data['EMAIL']+'</div>';
                     html +=     '<div class="description">상태메시지</div>';
                     html += '</div>';
                     html += '<div id="btnSettings" class="ui bottom attached button">';
@@ -152,15 +152,15 @@
         }
 
         function openUserListModal() {
-            let html = '';
+            var html = '';
             
             apiUsers.list(function(data) {
                 $.each(data, function(i, item) {
                     if(myInfo._id != item._id) {
-                        html += '<div class="item" data-uid="'+item._id+'" onclick="addSelectedUser(this);">';
+                        html += '<div class="item" data-uid="'+item['_id']+'" onclick="addSelectedUser(this);">';
                         html +=     '<img class="ui avatar image" src="/images/avatar/default.png">';                       
                         html +=     '<div class="content">';
-                        html +=         '<a class="header name">'+item.NAME+'</a>';
+                        html +=         '<a class="header name">'+item['NAME']+'</a>';
                         html +=         '<div class="description">상태메시지</div>';
                         html +=     '</div>';
                         html += '</div>';
@@ -174,23 +174,21 @@
         }
 
         function addSelectedUser(obj) {
-            let uid = $(obj).data('uid');
-            let name = $(obj).find('.name').text();
-            let avatar = $(obj).find('.avatar').attr('src');
+            var uid = $(obj).data('uid');
+            var name = $(obj).find('.name').text();
+            var avatar = $(obj).find('.avatar').attr('src');
             
             if(selectedUsers.indexOf(uid) < 0) {
-                let html = '';
+                var html = '';
                 html += '<div class="ui image label" style="margin:3px;">';
                 html +=     '<img src="'+avatar+'">'+name+' <i class="icon close"></i>';                       
                 html += '</div>';
 
-                let $new = $(html);
+                var $new = $(html);
                 //$(obj).hide('normal');
                 //$(obj).hide('normal').remove();
                 $new.hide().appendTo($selectedUserLabels).fadeIn('fast');
-                selectedUsers.push({
-                    _id : uid
-                });
+                selectedUsers.push(uid);
                 //console.log("added:", selectedUsers); 
 
                 // Delete Event
@@ -199,7 +197,7 @@
                     //$(obj).appendTo($userList).show('normal');
                     $new.hide('normal').remove();
                     selectedUsers = selectedUsers.filter(function(item) { 
-                        return item._id !== uid;
+                        return item !== uid;
                     });
                     //console.log("deleted:", selectedUsers);
                 });
@@ -213,13 +211,116 @@
                 params.selectedUsers = selectedUsers;
 
                 apiRooms.save(params, function(data) {
-                    console.log(data);
+                    if(data.result == 'success') {
+                        location.href = "/?roomId="+data.roomId;
+                    }
                 });
             }
         }
 
+        function getRoomList(roomId) {
+            apiRooms.list(function(data) {
+                console.log("getRoomList", data);
+                var html = '';
+                $.each(data, function(i, room) {
+                    var roomMembers = room['MEMBERS'];
+                    var roomName = '';
+                    var roomDate = room['ROOM_UDT_DT'];
+                    var roomDate = myFunc.isToday(roomDate) ? myFunc.getFormatDate(roomDate, 'HH:mm') : myFunc.getFormatDate(roomDate, 'YY.MM.DD');
+
+                    $.each(roomMembers, function(j, member) {
+                        if(myInfo._id = member['_id']) {
+                            roomName = member['ROOM_NAME'];
+                        }
+                    });
+
+                    html += '<div class="item" data-room-id="'+room['ROOM_ID']+'" onclick="openRoom(this);">';
+                    html +=     '<span class="ui right floated">'+roomDate+'</span>';
+                    html +=     '<div class="content" style="width:100%;">';
+                    html +=     '<img class="ui left floated avatar image" src="/images/avatar/default.png">';          
+                    html +=         '<a class="header">'+roomName+' ('+roomMembers.length+')</a>';
+                    html +=         '<div class="description">';
+                    html +=             '<a class="ui right floated red circular small label">'+room['UNREAD_MSG_CNT']+'</a>';
+                    html +=             '<span>'+room['LAST_MESSAGE']+'</span>';
+                    html +=         '</div>';
+                    html +=     '</div>';
+                    html += '</div>';
+                });
+
+                $roomList.empty();
+                $roomList.append(html);
+
+                if(roomId) {
+                    $("div[data-room-id="+roomId+"]").trigger("click");
+                }
+            });
+        }
+
+        function openRoom(obj) {
+            var $item = $(obj);
+            console.log("openRoom", $item.data("roomId"));
+        }
+
+        function createMessage(data) {
+            var info = '';
+            info += '<div class="ui mini message chatInfo">님이 초대하셨습니다.</div>';
+
+            for(var i=0; i<20; i++) {
+                var html = '';
+                var from = '';
+
+                if(i%2 == 0) {
+                    from = 'fromMe';
+                } else {
+                    from = 'fromOther';
+                }
+                
+                html += '<div class="chatBox">';
+                html += '<div class="comment chatInner">';
+                //html +=     '<a class="avatar"><img src="/images/avatar/default.png"></a>';
+                html +=     '<div class="content">';
+                //html +=         '<a class="author">Matt</a>';
+                html +=         '<div class="metadata"><span class="date">Today at 5:42PM</span></div>';
+                html +=         '<div class="ui message chatMessage"></div>';
+                //html +=         '<div class="actions"><a class="reply">Reply</a></div>';
+                html +=     '</div>';
+                html += '</div>';
+                html += '</div>';
+                
+                var $chat = $(html);
+                $chat.find(".chatInner").addClass(from);
+                if(from == 'fromOther') {
+                    $chat.find(".chatInner").prepend('<a class="avatar"><img src="/images/avatar/default.png"></a>');
+                    $chat.find(".chatInner .content").prepend('<a class="author">Matt</a>');
+                    $chat.find(".chatInner .chatMessage").addClass('blue');
+                } else {
+                    $chat.find(".chatInner .chatMessage").addClass('green');
+                }
+
+                $("#messages").prepend($chat);
+            }
+
+            $("#messages").prepend(info);
+        }
+
         $(document).ready(function() {
+            // Scrollbar
+            $(".customScroll").mCustomScrollbar({
+                theme: "dark"
+            });
+
+            // 로그인 유저 정보
             getMyInfo();
+            
+            // roomId 가 존재하면 채팅방 리스트 불러온 후 선택
+            var roomId = myFunc.getUrlVars()['roomId'];
+            if(roomId) {
+                // 채팅방 리스트
+                getRoomList(roomId);
+            } else {
+                getRoomList();
+            }
+            
 
             $modal.modal({
                 onApprove : function() {

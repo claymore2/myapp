@@ -1,4 +1,5 @@
 const logger = require('../config/logger');
+const mongoose = require('mongoose');
 const User = require('../models/users');
 
 // DB 공통 함수
@@ -32,7 +33,7 @@ var isLoggedIn = function (req, res, next) {
     }
 }
 
-//값이 있는지 체크
+// 값이 있는지 체크
 var isEmpty = function (value) {
     if (value == "" || value == null || value == undefined || (value != null && typeof value == "object" && !Object.keys(value).length)) {
       return true
@@ -41,14 +42,60 @@ var isEmpty = function (value) {
     }
 }
 
+// 현재 날짜
 var getCurrentDate = function() {
     return new Date().getTime();
 }
 
+// String to ObjectId
+var strToObjectId = function(value) {
+    if (typeof value === 'Array') {
+        return value.map(mongoose.Types.ObjectId);
+        // return value.map(function(o) {
+        //     if(!o instanceof mongoose.Types.ObjectId) {
+        //         return mongoose.Types.ObjectId(o);
+        //     }
+        //     return o;
+        // });
+    }
+    return mongoose.Types.ObjectId(value);
+}
+
+// ObjectId to String
+var objectIdToStr = function(value) {
+    if (typeof value === 'Array') {
+        //return value.map(toString);
+        return value.map(function(o) {
+            return o.toString();
+        });
+    }
+    return value.toString();
+}
+
+// 배열 정렬
+var arraySort = function (name, type) {
+    return function (o, p) {
+      var a, b;
+      if (o && p && typeof o === 'object' && typeof p === 'object') {
+        a = o[name];
+        b = p[name];
+        if (a === b) {
+          return typeof type === 'function' ? type(o, p) : o;
+        }
+        if (typeof a === typeof b) {
+          return a < b ? -1 : 1;
+        }
+        return typeof a < typeof b ? -1 : 1;
+      }
+    }
+}
 
 module.exports = {
     fnDb: fnDb,
     isLoggedIn: isLoggedIn,
     isEmpty: isEmpty,
-    getCurrentDate: getCurrentDate
+    getCurrentDate: getCurrentDate,
+    strToObjectId: strToObjectId,
+    objectIdToStr: objectIdToStr,
+    arraySort: arraySort
 }

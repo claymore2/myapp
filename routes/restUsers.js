@@ -5,10 +5,7 @@ const fn = require('../routes/functions');
 
 router.get('/api/users', function(req, res, next) {
     User.find({}, (err, users) => {
-        if (err) {
-            logger.error(err);
-            res.json({error: err});
-        }
+        if (err) next(err);
         //logger.info(users);
         res.json(users);
     });
