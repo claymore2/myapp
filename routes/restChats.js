@@ -6,7 +6,7 @@ const Chat = require('../models/chats');
 const fn = require('../routes/functions');
 const async = require("async");
 
-// 방 조회
+// 방 리스트 조회
 router.get('/api/rooms', fn.isLoggedIn, function(req, res, next) {
     var myUid = req.user._id;
 
@@ -149,6 +149,13 @@ router.post('/api/rooms', fn.isLoggedIn, function(req, res, next) {
             });
         }
     });
+});
+
+// 채팅 리스트 조회
+router.get('/api/rooms/:roomId/chats', fn.isLoggedIn, function(req, res, next) {
+    var roomId = req.params.roomId;
+
+
 });
 
 function fInfoMsg(roomId, myUid, myName, myRoomName, roomMember, chatMsg) {

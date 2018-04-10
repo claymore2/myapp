@@ -5,14 +5,12 @@ const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const routes = require('./routes/routes');
-const port = process.env.PORT || 3000;
+
 const bodyParser = require('body-parser');
-const session = require('express-session');
-const passport = require('passport');
-require('./config/passport')(passport);
+
 const logger = require('./config/logger');
 
-// Set MongoDB
+// [START] MongoDB --------------------------------
 const mongoose = require('mongoose');
 // Node.js의 native Promise 사용
 mongoose.Promise = global.Promise;
@@ -20,25 +18,42 @@ mongoose.Promise = global.Promise;
 mongoose.connect(process.env.MONGO_URI)
     .then(() => logger.info('Successfully connected to mongodb'))
     .catch(e => logger.error(e));
+// [END] MongoDB --------------------------------
+
+// [START] Session & Redis ----------------------
+const session = require('express-session');
+const redis = require('redis');
+const redisStore = require('connect-redis')(session);
+const redisClient = redis.createClient();
+
+app.use(session({
+    secret: '!@#claymore$%^',
+    resave: false, // don't save session if unmodified
+    saveUninitialized: false, // don't create session until something stored,
+    cookie: {
+        maxAge: 1000 * 60 * 60 // 쿠키 유효기간 1시간
+    },
+    store: new redisStore({
+        host: "127.0.0.1",
+        port: 6379,
+        client: redisClient,
+        prefix : "session:",
+        db : 0
+    }),
+}));
+// [END] Session & Redis ----------------------
+
+// Passport
+const passport = require('passport');
+require('./config/passport')(passport);
+app.use(passport.initialize());
+app.use(passport.session()); // session 연결
 
 // Static File Service
 app.use(express.static(path.join(__dirname, 'public')));
 // Body-parser
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
-// Session & Passport
-app.use(session({
-    secret: '!@#claymore$%^',
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        maxAge: 1000 * 60 * 60 // 쿠키 유효기간 1시간
-    }
-}));
-
-app.use(passport.initialize());
-app.use(passport.session()); // session 연결
 
 // Flash Message
 //const flash = require('connect-flash');
@@ -57,4 +72,5 @@ app.use((err, req, res, next) => { // 에러 처리 부분 next(err) 시 호출
     res.status(500).send('서버 에러'); // 500 상태 표시 후 에러 메시지 전송
 });
 
+const port = process.env.PORT || 3000;
 http.listen(port, () => logger.info('Server listening on port: '+port));

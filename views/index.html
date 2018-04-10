@@ -119,7 +119,7 @@
     <script>
         var selectedUsers = [];
         var $roomList = $("#roomList");
-        var $modal = $("#userListModal");
+        var $userListModal = $("#userListModal");
         var $userList = $("#userList");
         var $selectedUserLabels = $("#selectedUserLabels");
         var $messagesWrapper = $("#messagesWrapper");
@@ -169,7 +169,7 @@
 
                 $userList.empty();
                 $userList.append(html);
-                $modal.modal('show');
+                $userListModal.modal('show');
             });
         }
 
@@ -212,7 +212,8 @@
 
                 apiRooms.save(params, function(data) {
                     if(data.result == 'success') {
-                        location.href = "/?roomId="+data.roomId;
+                        //location.href = "/?roomId="+data.roomId;
+                        getRoomList(roomId);
                     }
                 });
             }
@@ -313,16 +314,16 @@
             getMyInfo();
             
             // roomId 가 존재하면 채팅방 리스트 불러온 후 선택
-            var roomId = myFunc.getUrlVars()['roomId'];
-            if(roomId) {
-                // 채팅방 리스트
-                getRoomList(roomId);
-            } else {
-                getRoomList();
-            }
+            // var roomId = myFunc.getUrlVars()['roomId'];
+            // if(roomId) {
+            //     // 채팅방 리스트
+            //     getRoomList(roomId);
+            // } else {
+            //     getRoomList();
+            // }
             
-
-            $modal.modal({
+                
+            $userListModal.modal({
                 onApprove : function() {
                     inviteUsers();
                 }
