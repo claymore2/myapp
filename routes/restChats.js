@@ -25,7 +25,7 @@ router.get('/api/rooms', fn.isLoggedIn, function(req, res, next) {
             async.map(rooms, function (room, done) {
                 Chat.find({
                     'ROOM_ID': room['_id'],
-                    'UNREAD_MEMBERS._id': myUid
+                    'UNREAD_MEMBERS': myUid
                 }).count(function (err, unreadMsgCnt) {
                     done(null, {
                         'ROOM_ID': room['_id'],
@@ -128,9 +128,18 @@ router.post('/api/rooms', fn.isLoggedIn, function(req, res, next) {
 
                     newRoom.save((err) => {
                         if (err) next(err);
-
-                        var chatMsg = myName + '님이 ' + myRoomName + '방을 생성하였습니다.';
-                        fInfoMsg(newRoom['_id'], myUid, myName, myRoomName, newRoom['MEMBERS'], chatMsg);
+                        
+                        var msg = myName + '님이 ' + myRoomName + '방을 생성하였습니다.';
+                        var unreadMembers = newRoom['MEMBERS'].map(v => v._id);
+                        fn.fnDb.saveChat({
+                            roomId: newRoom['_id'],
+                            userId: myUid,
+                            userName: myName,
+                            chatType: "110",
+                            msg: msg,
+                            unreadMembers: unreadMembers
+                        });
+                        //fInfoMsg(newRoom['_id'], myUid, myName, newRoom['MEMBERS'], chatMsg);
 
                         logger.info("POST[/api/rooms] roomSaved: ", fn.objectIdToStr(newRoom['_id']));
                         res.json({
@@ -162,27 +171,26 @@ router.post('/api/chats/list', fn.isLoggedIn, function(req, res, next) {
             _id : roomId
         }, {MEMBERS: true}, (err, room) => {
             var members = room.MEMBERS;
-            var roomEntranceDate = 9999999999999;
+            var roomEntranceDate;
             members.forEach((v, i) => {
-                if(members[i]._id = myUid) {
+                if(members[i]._id.equals(myUid)) {
                     roomEntranceDate = members[i].ROOM_ENTRANCE_DATE;
                 }
             });
-            //logger.info("POST[/api/chats/list] roomEntranceDate: ", roomEntranceDate);
 
             Chat.find({
                 // 방에 입장한 이 후의 메세지만 보여줌
-                $and : [{ROOM_ID: roomId}, {REG_DT: {$gte: roomEntranceDate}}]
+                $and : [{'ROOM_ID': roomId}, {'REG_DT': {$gte: roomEntranceDate}}]
             }, (err, chats) => {
                 if(err) next(err);
                 logger.info("POST[/api/chats/list] chats: ", chats.length);
                 // 메세지 전부 읽음 처리
                 Chat.update({
                     'ROOM_ID': roomId,
-                    'UNREAD_MEMBERS._id': myUid
+                    'UNREAD_MEMBERS': myUid
                 },{
                     $pull: {
-                        'UNREAD_MEMBERS': {_id: myUid}
+                        'UNREAD_MEMBERS': myUid
                     },
                     $addToSet: {
                         'READ_MEMBERS': myUid
@@ -199,36 +207,5 @@ router.post('/api/chats/list', fn.isLoggedIn, function(req, res, next) {
         });
     }
 });
-
-function fInfoMsg(roomId, myUid, myName, myRoomName, roomMember, chatMsg) {
-    if (!fn.isEmpty(myUid)) {
-        var newChat = new Chat();
-        newChat['ROOM_ID'] = roomId;
-        newChat['USER_ID'] = myUid;
-        newChat['USER_NAME'] = myName;
-        newChat['CHAT_TYPE'] = "110";
-        //chatMsg = encodeURIComponent(chatMsg);
-        // if (!fn.isEmpty(chatMsg)) {
-        //     chatMsg = fn.cryptStr({
-        //         'val': chatMsg,
-        //         'type': 'bi',
-        //         'crypttype': nodeConf.crypttype,
-        //         'subtype': 'enc',
-        //         'key': roomKey
-        //     });            
-        // }
-        newChat['MESSAGE'] = chatMsg;
-        newChat['MEMBERS'] = roomMember;
-        //newChat['UNREAD_CNT'] = roomMember.length;
-        newChat['UNREAD_MEMBERS'] = roomMember;
-        newChat['REG_DT'] = fn.getCurrentDate();
-
-        newChat.save((err) => {
-            if (err) next(err);
-            logger.info("fInfoMsg: ", chatMsg);
-        });
-    }
-}
-
 
 module.exports = router;

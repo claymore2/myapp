@@ -8,10 +8,11 @@ myFunc = (function($) {
         getLoginUser : function(callback) {
             apiUsers.info("loginUser", function(data) {
                 if(data) {
-                    var user = {};
-                    user._id = data._id;
-                    user.name = data.name;
-                    callback(user);
+                    callback({
+                        _id: data['_id'],
+                        email: data['EMAIL'],
+                        name: data['NAME'],
+                    });
                 }
             });
         },

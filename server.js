@@ -77,5 +77,5 @@ server.listen(port, () => logger.info('HTTP Server listening on port: '+port));
 const socketIo = require('socket.io');
 const io = socketIo(server);
 // Set Socket Events
-const socketEvents = require('./socket.js')(io);
+const socketEvents = require('./socket.js')(io, redisClient);
 

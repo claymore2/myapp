@@ -51,7 +51,7 @@
             <div class="twelve wide column">
                 <div class="ui card" style="width:100%;">
                     <div class="content">
-                        <div class="header">Main</div>
+                        <div id="roomName" class="header">Main</div>
                     </div>
                     <!-- 채팅방 생성하기 -->
                     <div id="newChatContainer" class="content" style="height:600px;">
@@ -69,7 +69,7 @@
                     </div>
                     <!-- 채팅방 -->
                     <div id="chatContainer" class="content" style="display: none;">
-                        <div class="customScroll" style="height:514px;">
+                        <div id="chatView" class="customScroll" style="height:514px;">
                             <div id="messages" class="ui comments"></div>
                         </div>
                         <div class="ui form">
@@ -157,6 +157,7 @@
     <script>
         var loginUser = {};
         var selectedUsers = [];
+        var selectedRoomId = "";
         var $roomList = $("#roomList");
         var $userListModal = $("#userListModal");
         var $userList = $("#userList");
@@ -262,7 +263,7 @@
                     var unreadMsgCnt = room['UNREAD_MSG_CNT'];
 
                     $.each(roomMembers, function(j, member) {
-                        if(loginUser._id = member['_id']) {
+                        if(loginUser._id == member['_id']) {
                             roomName = member['ROOM_NAME'];
                         }
                     });
@@ -293,37 +294,97 @@
 
         function openRoom(obj) {
             var $item = $(obj);
-            console.log("openRoom", $item.data("roomId"));
+            var roomId = $item.data("roomId");
+            console.log("openRoom", roomId);
             params = {};
-            params.roomId = $item.data("roomId");
+            params.roomId = roomId;
+            selectedRoomId = roomId;
+
+            // 채팅방 입장 소켓
+            // if(!isEmpty(roomkey)){
+            //     socket.emit('leaveroom',{'type':'leave','roomkey':roomkey,'uid':my_uid,'device':my_device});
+            // }
+            if(loginUser._id){
+                console.log("joinRoom emit")
+                socket.emit('joinRoom',{'type':'join','roomId':roomId,'uid':loginUser._id,'device':'WEB'});
+                //socket.emit('connect_check',{'roomId':roomId,'uid':my_uid,'device':'WEB','myStatus':'focus'});
+            }
+
+            // 채팅방 정보
+
 
             // 채팅 리스트
             apiChats.list(params, function(chats) {
-                createMessage(chats);
+                $messages.empty();
 
+                $.each(chats, function(i, chat) {
+                    var obj = {};
+                    obj.chatType = chat['CHAT_TYPE'];
+                    obj.msg = chat['MESSAGE'];
+                    obj.userId = chat['USER_ID'];
+                    obj.userName = chat['USER_NAME'];
+
+                    createMessage(obj, false, "p");
+                });
                 $newChatContainer.hide();
                 $chatContainer.show();
             });
+
+            // 채팅방 리스트 reload
+            getRoomList();
         }
 
-        function createMessage(data) {
-            console.log(data);
+        // 채팅 메세지 생성 및 전송
+        function createMessage(chat, emit, pos) {
+            //console.log("createMessage", chat);
+            var chatType = chat.chatType;
+            var msg = chat.msg;
+            var userId = chat.userId;
+            var userName = chat.userName;
+            var from = loginUser._id == userId ? "fromMe" : "fromOther";
+            var html = "";
+            var $chat;
 
-            $.each(data, function(i, chat) {
-                var chatType = chat['CHAT_TYPE'];
-                var msg = chat['MESSAGE'];
-                var userId = chat['USER_ID'];
-                var userName = chat['USER_NAME'];
-                var msgHtml = "";
-
-                // 정보 메세지 (110)
-                if(chatType == "110") {
-                    msgHtml += '<div class="ui mini message chatInfo">'+msg+'</div>';
+            // 정보 메세지
+            if(chatType == "110") {
+                html += '<div class="ui mini message chatInfo">'+msg+'</div>';
+                $chat = $(html);
+            // 일반 메세지
+            } else if(chatType == "101") {
+                html += '<div class="chatBox">';
+                html +=     '<div class="comment chatInner">';
+                html +=         '<div class="content">';
+                html +=             '<div class="metadata"><span class="date">Today at 5:42PM</span></div>';
+                html +=             '<div class="ui message chatMessage">'+msg+'</div>';
+                //html +=           '<div class="actions"><a class="reply">Reply</a></div>';
+                html +=         '</div>';
+                html +=     '</div>';
+                html += '</div>';
+                
+                $chat = $(html);
+                $chat.find(".chatInner").addClass(from);
+                if(from == 'fromOther') {
+                    $chat.find(".chatInner").prepend('<a class="avatar"><img src="/images/avatar/default.png"></a>');
+                    $chat.find(".chatInner .content").prepend('<a class="author">'+userName+'</a>');
+                    $chat.find(".chatInner .chatMessage").addClass('blue');
+                } else {
+                    $chat.find(".chatInner .chatMessage").addClass('green');
                 }
+            }
 
-                // 최신순으로 아래에서 위로 추가
-                $messages.prepend(msgHtml);
-            });
+            // 소켓 전송
+            if(emit) {
+                socket.emit('sendMessage', chat);
+            }
+
+            // 메세지 위치
+            if(pos == "p") {
+                $messages.prepend($chat);
+            } else {
+                $messages.append($chat);
+                // Scroll
+                $("#chatView").mCustomScrollbar("scrollTo", "last");
+            }
         }
 
         $(document).ready(function() {
@@ -370,9 +431,52 @@
                 var key = e.keyCode;
                 // If the user has pressed enter
                 if (key == 13) {
-                    
+                    var msg = $(this).val();
+                    var chat = {
+                        roomId: selectedRoomId,
+                        chatType: "101",
+                        msg: msg,
+                        userId: loginUser._id,
+                        userName: loginUser.name
+                    };
+                    createMessage(chat, true, "a");
+                    $(this).val('');
                 }
             });
+        });
+
+        // Socket Events
+        var myStatus;
+        $(window).blur(function(){
+            if(selectedRoomId != "") {
+                myStatus = "blur";
+                console.log("사용자가 채팅창에서 나갔습니다..");
+                socket.emit('checkConnect',{'roomId':selectedRoomId,'device':'WEB','myStatus':myStatus,'uid':loginUser._id});
+                //rangs = window.setTimeout('window.location.reload()',300000);
+            }
+        });
+
+        $(window).focus(function(){
+            if(selectedRoomId != "") {
+                myStatus = "focus";
+                console.log("사용자가 채팅창에 돌아왔습니다.");
+                socket.emit('checkConnect',{'roomId':selectedRoomId,'device':'WEB','myStatus':myStatus,'uid':loginUser._id});
+                //fUnreadMsg(roomId)
+            }
+        });
+
+        socket.on('broadcastMsg', function(chat) {
+            console.log('broadcastMsg', chat);
+            var obj = {};
+            var roomId = chat['ROOM_ID'];
+            obj.chatType = chat['CHAT_TYPE'];
+            obj.msg = chat['MESSAGE'];
+            obj.userId = chat['USER_ID'];
+            obj.userName = chat['USER_NAME'];
+            if(selectedRoomId == roomId) {
+                createMessage(obj, false, "a");
+            }
+            getRoomList();
         });
     </script>
 </body>

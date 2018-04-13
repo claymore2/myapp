@@ -1,6 +1,7 @@
 const logger = require('../config/logger');
 const mongoose = require('mongoose');
 const User = require('../models/users');
+const Chat = require('../models/chats');
 
 // DB 공통 함수
 var fnDb = {
@@ -14,6 +15,40 @@ var fnDb = {
         } else {
             callback(null);
         }
+    },
+    saveChat: function(data, callback) {
+        var newChat = new Chat();
+        newChat['ROOM_ID'] = data.roomId;
+        newChat['USER_ID'] = data.userId;
+        newChat['USER_NAME'] = data.userName;
+        newChat['CHAT_TYPE'] = data.chatType;
+        //chatMsg = encodeURIComponent(chatMsg);
+        // if (!fn.isEmpty(chatMsg)) {
+        //     chatMsg = fn.cryptStr({
+        //         'val': chatMsg,
+        //         'type': 'bi',
+        //         'crypttype': nodeConf.crypttype,
+        //         'subtype': 'enc',
+        //         'key': roomKey
+        //     });            
+        // }
+        newChat['MESSAGE'] = data.msg;
+        //newChat['MEMBERS'] = data.roomMember;
+        //newChat['UNREAD_CNT'] = data.unreadMember.length;
+        newChat['UNREAD_MEMBERS'] = data.unreadMembers;
+        newChat['READ_MEMBERS'] = [];
+        if(data.readMembers) {
+            newChat['READ_MEMBERS'] = data.readMembers;
+        }
+        newChat['REG_DT'] = getCurrentDate();
+
+        newChat.save((err) => {
+            if (err) logger.error("saveChat: ", err);;
+            logger.info("saveChat: ", data.msg);
+            if(callback) {
+                callback(newChat);
+            }
+        });
     }
 }
 
@@ -44,7 +79,9 @@ var isEmpty = function (value) {
 
 // 현재 날짜
 var getCurrentDate = function() {
-    return new Date().getTime();
+    var currentDate = new Date().getTime();
+    //logger.info("getCurrentDate!!", currentDate);
+    return currentDate;
 }
 
 // String to ObjectId
@@ -90,6 +127,19 @@ var arraySort = function (name, type) {
     }
 }
 
+// 배열에서 중복값 찾아서 지우기
+function removeArrayDuplicate(array) {
+    var a = {};
+    for (var i = 0; i < array.length; i++) {
+        if (typeof a[array[i]] == "undefined")
+            a[array[i]] = 1;
+    }
+    array.length = 0;
+    for (var i in a)
+        array[array.length] = i;
+    return array;
+}
+
 module.exports = {
     fnDb: fnDb,
     isLoggedIn: isLoggedIn,
@@ -97,5 +147,6 @@ module.exports = {
     getCurrentDate: getCurrentDate,
     strToObjectId: strToObjectId,
     objectIdToStr: objectIdToStr,
-    arraySort: arraySort
+    arraySort: arraySort,
+    removeArrayDuplicate: removeArrayDuplicate
 }
