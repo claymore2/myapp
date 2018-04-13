@@ -3,11 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const app = express();
-const http = require('http').Server(app);
+const server = require('http').Server(app);
 const routes = require('./routes/routes');
-
 const bodyParser = require('body-parser');
-
 const logger = require('./config/logger');
 
 // [START] MongoDB --------------------------------
@@ -73,4 +71,11 @@ app.use((err, req, res, next) => { // 에러 처리 부분 next(err) 시 호출
 });
 
 const port = process.env.PORT || 3000;
-http.listen(port, () => logger.info('Server listening on port: '+port));
+server.listen(port, () => logger.info('HTTP Server listening on port: '+port));
+
+// Socket.io 웹소켓을 HTTP Server 와 연결
+const socketIo = require('socket.io');
+const io = socketIo(server);
+// Set Socket Events
+const socketEvents = require('./socket.js')(io);
+

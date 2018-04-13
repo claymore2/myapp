@@ -1,4 +1,4 @@
-var apiUsers, apiRooms;
+var apiUsers, apiRooms, apiChats;
 
 function callAjax(url, method, params, callback) {
     $.ajax({
@@ -6,7 +6,9 @@ function callAjax(url, method, params, callback) {
         method: method,
         data: params,
         success: function(data) {
-            callback(data);
+            if(callback) {
+                callback(data);
+            }
         },
         error: function(err) {
             console.log(err);
@@ -21,6 +23,9 @@ apiUsers = (function($) {
         },
         list : function(callback) {
             callAjax("/api/users", "GET", {}, callback);
+        },
+        logout: function() {
+            callAjax("/api/logout", "GET", {});
         }
     }
 })(jQuery);
@@ -32,6 +37,18 @@ apiRooms = (function($) {
         },
         save : function(params, callback) {
             callAjax("/api/rooms", "POST", params, callback);
+        }
+    }
+})(jQuery);
+
+
+apiChats = (function($) {
+    return {
+        list : function(params, callback) {
+            callAjax("/api/chats/list", "POST", params, callback);
+        },
+        save : function(params, callback) {
+            callAjax("/api/chats/save", "POST", params, callback);
         }
     }
 })(jQuery);

@@ -49,7 +49,7 @@ var getCurrentDate = function() {
 
 // String to ObjectId
 var strToObjectId = function(value) {
-    if (typeof value === 'Array') {
+    if (value instanceof Array) {
         return value.map(mongoose.Types.ObjectId);
         // return value.map(function(o) {
         //     if(!o instanceof mongoose.Types.ObjectId) {
@@ -63,7 +63,7 @@ var strToObjectId = function(value) {
 
 // ObjectId to String
 var objectIdToStr = function(value) {
-    if (typeof value === 'Array') {
+    if (value instanceof Array) {
         //return value.map(toString);
         return value.map(function(o) {
             return o.toString();

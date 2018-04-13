@@ -1,7 +1,20 @@
 var myFunc;
+// Socket.io Client
+var socket = io();
 
 myFunc = (function($) {
     return {
+        // 로그인 유저 정보 조회
+        getLoginUser : function(callback) {
+            apiUsers.info("loginUser", function(data) {
+                if(data) {
+                    var user = {};
+                    user._id = data._id;
+                    user.name = data.name;
+                    callback(user);
+                }
+            });
+        },
         // Read a page's GET URL variables and return them as an associative array.
         getUrlVars : function() {
             var vars = [], hash;

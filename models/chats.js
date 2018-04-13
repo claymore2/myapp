@@ -7,7 +7,7 @@ var chatSchema = mongoose.Schema({
     CHAT_TYPE: String,
     MESSAGE: String,
     MEMBERS: [],
-    UNREAD_CNT: Number,
+    //UNREAD_CNT: Number,
     UNREAD_MEMBERS: [],
     READ_MEMBERS: [],
     REG_DT: {type : Number, default: new Date().getTime()},

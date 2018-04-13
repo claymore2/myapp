@@ -22,8 +22,8 @@
                         <div class="meta">Email</div>
                         <div class="description">상태메시지</div>
                     </div>
-                    <div id="btnSettings" class="ui bottom attached button">
-                        <i class="settings icon"></i> Settings
+                    <div id="btnProfile" class="ui bottom attached button">
+                        <i class="settings icon"></i> Profile
                     </div>
                 </div>
                 <!-- 채팅방 리스트 -->
@@ -68,8 +68,18 @@
                         </div>
                     </div>
                     <!-- 채팅방 -->
-                    <div id="messagesWrapper" class="content customScroll" style="display: none;">
-                        <div id="messages" class="ui comments"></div>
+                    <div id="chatContainer" class="content" style="display: none;">
+                        <div class="customScroll" style="height:514px;">
+                            <div id="messages" class="ui comments"></div>
+                        </div>
+                        <div class="ui form">
+                            <div class="field">
+                                <div class="ui action input">
+                                    <textarea rows="2" id="msgArea" style="resize: none;"></textarea>
+                                    <button id="btnSend" class="ui primary basic button">Send</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -110,44 +120,66 @@
             </div>
         </div>
     </div>
+
+    <!-- 유저 프로필 창 -->
+    <div id="userProfileModal" class="ui modal">
+        <div class="header">
+            Profile Picture
+        </div>
+        <div class="image content">
+            <div class="ui medium image">
+                <img src="/images/avatar/default.png">
+            </div>
+            <div class="description">
+                <div class="ui header">We've auto-chosen a profile image for you.</div>
+                <p>We've grabbed the following image from the
+                    <a href="https://www.gravatar.com" target="_blank">gravatar</a> image associated with your registered e-mail address.</p>
+                <p>Is it okay to use this photo?</p>
+            </div>
+        </div>
+        <div class="actions">
+            <div id="btnLogout" class="ui black deny button">
+                Logout
+            </div>
+            <div id="btnProfileSave" class="ui positive right labeled icon button">
+                Yep, that's me
+                <i class="checkmark icon"></i>
+            </div>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/libs/jquery/jquery-3.3.1.min.js"></script>
     <script src="/libs/semantic/semantic.min.js"></script>
     <script src="/libs/moment/moment.js"></script>
     <script src="/libs/jquery-scrollbar/jquery.mCustomScrollbar.concat.min.js"></script>
-    <script src="/js/common.js"></script>
     <script src="/js/restApi.js"></script>
+    <script src="/js/common.js"></script>
     <script>
+        var loginUser = {};
         var selectedUsers = [];
         var $roomList = $("#roomList");
         var $userListModal = $("#userListModal");
         var $userList = $("#userList");
         var $selectedUserLabels = $("#selectedUserLabels");
-        var $messagesWrapper = $("#messagesWrapper");
-        var myInfo = {};
+        var $newChatContainer = $("#newChatContainer");
+        var $chatContainer = $("#chatContainer");
+        var $messages = $("#messages");
 
         function getMyInfo() {
             var $myInfoCard = $("#myInfoCard");
             var html = '';
-            
-            apiUsers.info("loginUser", function(data) {
-                //console.log(data);
-                if(data) {
-                    myInfo._id = data._id;
-                    myInfo.name = data.NAME;
 
-                    html += '<div class="content">';
-                    html +=     '<img class="right floated ui avatar image" src="/images/avatar/default.png">';                       
-                    html +=     '<div class="header">'+data['NAME']+'</div>';
-                    html +=     '<div class="meta">'+data['EMAIL']+'</div>';
-                    html +=     '<div class="description">상태메시지</div>';
-                    html += '</div>';
-                    html += '<div id="btnSettings" class="ui bottom attached button">';
-                    html +=     '<i class="settings icon"></i> Settings';
-                    html += '</div>';
-
-                    $myInfoCard.empty();
-                    $myInfoCard.append(html);
-                }
+            myFunc.getLoginUser(function(user) {
+                html += '<div class="content">';
+                html +=     '<img class="right floated ui avatar image" src="/images/avatar/default.png">';                       
+                html +=     '<div class="header">'+user.name+'</div>';
+                html +=     '<div class="meta">'+user.email+'</div>';
+                html +=     '<div class="description">상태메시지</div>';
+                html += '</div>';
+                $myInfoCard.find(".content").remove();
+                $myInfoCard.prepend(html);
+                // 정보 담기
+                loginUser = user;
             });
         }
 
@@ -156,7 +188,7 @@
             
             apiUsers.list(function(data) {
                 $.each(data, function(i, item) {
-                    if(myInfo._id != item._id) {
+                    if(loginUser._id != item._id) {
                         html += '<div class="item" data-uid="'+item['_id']+'" onclick="addSelectedUser(this);">';
                         html +=     '<img class="ui avatar image" src="/images/avatar/default.png">';                       
                         html +=     '<div class="content">';
@@ -212,8 +244,7 @@
 
                 apiRooms.save(params, function(data) {
                     if(data.result == 'success') {
-                        //location.href = "/?roomId="+data.roomId;
-                        getRoomList(roomId);
+                        getRoomList(data.roomId);
                     }
                 });
             }
@@ -228,9 +259,10 @@
                     var roomName = '';
                     var roomDate = room['ROOM_UDT_DT'];
                     var roomDate = myFunc.isToday(roomDate) ? myFunc.getFormatDate(roomDate, 'HH:mm') : myFunc.getFormatDate(roomDate, 'YY.MM.DD');
+                    var unreadMsgCnt = room['UNREAD_MSG_CNT'];
 
                     $.each(roomMembers, function(j, member) {
-                        if(myInfo._id = member['_id']) {
+                        if(loginUser._id = member['_id']) {
                             roomName = member['ROOM_NAME'];
                         }
                     });
@@ -241,7 +273,9 @@
                     html +=     '<img class="ui left floated avatar image" src="/images/avatar/default.png">';          
                     html +=         '<a class="header">'+roomName+' ('+roomMembers.length+')</a>';
                     html +=         '<div class="description">';
-                    html +=             '<a class="ui right floated red circular small label">'+room['UNREAD_MSG_CNT']+'</a>';
+                    if(unreadMsgCnt > 0) {
+                        html +=          '<a class="ui right floated red circular small label">'+unreadMsgCnt+'</a>';
+                    }
                     html +=             '<span>'+room['LAST_MESSAGE']+'</span>';
                     html +=         '</div>';
                     html +=     '</div>';
@@ -260,48 +294,36 @@
         function openRoom(obj) {
             var $item = $(obj);
             console.log("openRoom", $item.data("roomId"));
+            params = {};
+            params.roomId = $item.data("roomId");
+
+            // 채팅 리스트
+            apiChats.list(params, function(chats) {
+                createMessage(chats);
+
+                $newChatContainer.hide();
+                $chatContainer.show();
+            });
         }
 
         function createMessage(data) {
-            var info = '';
-            info += '<div class="ui mini message chatInfo">님이 초대하셨습니다.</div>';
+            console.log(data);
 
-            for(var i=0; i<20; i++) {
-                var html = '';
-                var from = '';
+            $.each(data, function(i, chat) {
+                var chatType = chat['CHAT_TYPE'];
+                var msg = chat['MESSAGE'];
+                var userId = chat['USER_ID'];
+                var userName = chat['USER_NAME'];
+                var msgHtml = "";
 
-                if(i%2 == 0) {
-                    from = 'fromMe';
-                } else {
-                    from = 'fromOther';
-                }
-                
-                html += '<div class="chatBox">';
-                html += '<div class="comment chatInner">';
-                //html +=     '<a class="avatar"><img src="/images/avatar/default.png"></a>';
-                html +=     '<div class="content">';
-                //html +=         '<a class="author">Matt</a>';
-                html +=         '<div class="metadata"><span class="date">Today at 5:42PM</span></div>';
-                html +=         '<div class="ui message chatMessage"></div>';
-                //html +=         '<div class="actions"><a class="reply">Reply</a></div>';
-                html +=     '</div>';
-                html += '</div>';
-                html += '</div>';
-                
-                var $chat = $(html);
-                $chat.find(".chatInner").addClass(from);
-                if(from == 'fromOther') {
-                    $chat.find(".chatInner").prepend('<a class="avatar"><img src="/images/avatar/default.png"></a>');
-                    $chat.find(".chatInner .content").prepend('<a class="author">Matt</a>');
-                    $chat.find(".chatInner .chatMessage").addClass('blue');
-                } else {
-                    $chat.find(".chatInner .chatMessage").addClass('green');
+                // 정보 메세지 (110)
+                if(chatType == "110") {
+                    msgHtml += '<div class="ui mini message chatInfo">'+msg+'</div>';
                 }
 
-                $("#messages").prepend($chat);
-            }
-
-            $("#messages").prepend(info);
+                // 최신순으로 아래에서 위로 추가
+                $messages.prepend(msgHtml);
+            });
         }
 
         $(document).ready(function() {
@@ -312,6 +334,9 @@
 
             // 로그인 유저 정보
             getMyInfo();
+
+            // 채팅방 리스트
+            getRoomList();
             
             // roomId 가 존재하면 채팅방 리스트 불러온 후 선택
             // var roomId = myFunc.getUrlVars()['roomId'];
@@ -331,6 +356,22 @@
 
             $("#btnAddUser").on("click", function() {
                 openUserListModal();
+            });
+
+            $("#btnProfile").on("click", function() {
+                $("#userProfileModal").modal('show');
+            });
+
+            $("#btnLogout").on("click", function() {
+                apiUsers.logout();
+            });
+
+            $("#msgArea").on("keypress", function(e) {
+                var key = e.keyCode;
+                // If the user has pressed enter
+                if (key == 13) {
+                    
+                }
             });
         });
     </script>

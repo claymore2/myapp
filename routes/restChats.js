@@ -84,14 +84,14 @@ router.post('/api/rooms', fn.isLoggedIn, function(req, res, next) {
             }, (err, users) => {
                 if (err) next(err);
                 if (fn.isEmpty(users)) {
-                    logger.error('Empty Users...');
-                    res.json({error: 'Empty Users...'});
+                    logger.error('POST[/api/rooms] Empty User Error');
+                    return res.status(500).json({error: 'Empty User Error'});
                 }
 
                 async.map(users, (user, done) => {
                     var member = {};
                     var roomName = '';
-                    var roomEntranceDate = "9999999999999";
+                    var roomEntranceDate = 9999999999999;
 
                     // 룸 이름
                     users.forEach(function (element, index) {
@@ -109,12 +109,12 @@ router.post('/api/rooms', fn.isLoggedIn, function(req, res, next) {
                         myName = user['NAME'];
                         myRoomName = roomName;
                         roomEntranceDate = fn.getCurrentDate();
-                        
                     }
 
                     member['_id'] = user['_id'];
                     member['NAME'] = user['NAME'];
                     member['ROOM_NAME'] = roomName;
+                    member['ROOM_NAME_CHG_YN'] = "N";
                     member['ROOM_ENTRANCE_DATE'] = roomEntranceDate;
                     member['LAST_READ_MSG'] = "";
                     done(null, member);
@@ -152,10 +152,52 @@ router.post('/api/rooms', fn.isLoggedIn, function(req, res, next) {
 });
 
 // 채팅 리스트 조회
-router.get('/api/rooms/:roomId/chats', fn.isLoggedIn, function(req, res, next) {
-    var roomId = req.params.roomId;
+router.post('/api/chats/list', fn.isLoggedIn, function(req, res, next) {
+    var myUid = req.user._id;
+    var roomId = req.body.roomId;
+    logger.info("POST[/api/chats/list] roomId: ", roomId);
+    roomId = fn.strToObjectId(roomId);
+    if(!fn.isEmpty(roomId)) {
+        Room.findOne({
+            _id : roomId
+        }, {MEMBERS: true}, (err, room) => {
+            var members = room.MEMBERS;
+            var roomEntranceDate = 9999999999999;
+            members.forEach((v, i) => {
+                if(members[i]._id = myUid) {
+                    roomEntranceDate = members[i].ROOM_ENTRANCE_DATE;
+                }
+            });
+            //logger.info("POST[/api/chats/list] roomEntranceDate: ", roomEntranceDate);
 
+            Chat.find({
+                // 방에 입장한 이 후의 메세지만 보여줌
+                $and : [{ROOM_ID: roomId}, {REG_DT: {$gte: roomEntranceDate}}]
+            }, (err, chats) => {
+                if(err) next(err);
+                logger.info("POST[/api/chats/list] chats: ", chats.length);
+                // 메세지 전부 읽음 처리
+                Chat.update({
+                    'ROOM_ID': roomId,
+                    'UNREAD_MEMBERS._id': myUid
+                },{
+                    $pull: {
+                        'UNREAD_MEMBERS': {_id: myUid}
+                    },
+                    $addToSet: {
+                        'READ_MEMBERS': myUid
+                    }
+                },{
+                    multi: true
+                }, (err, results) => {});
 
+                res.json(chats);
+            // 최신 순으로 20개
+            }).sort({
+                "REG_DT": -1
+            }).limit(20);
+        });
+    }
 });
 
 function fInfoMsg(roomId, myUid, myName, myRoomName, roomMember, chatMsg) {
@@ -177,8 +219,9 @@ function fInfoMsg(roomId, myUid, myName, myRoomName, roomMember, chatMsg) {
         // }
         newChat['MESSAGE'] = chatMsg;
         newChat['MEMBERS'] = roomMember;
-        newChat['UNREAD_CNT'] = roomMember.length;
+        //newChat['UNREAD_CNT'] = roomMember.length;
         newChat['UNREAD_MEMBERS'] = roomMember;
+        newChat['REG_DT'] = fn.getCurrentDate();
 
         newChat.save((err) => {
             if (err) next(err);

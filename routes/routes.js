@@ -38,7 +38,7 @@ router.post('/api/signup', function(req, res, next) {
     passport.authenticate('signup', function(err, user, info) {
         if (err) return next(err);
         if (!user || info) {
-            res.json({result: 'false', msg: info.msg});
+            return res.json({result: 'false', msg: info.msg});
         }
         
         res.json({result: 'success'});
@@ -49,7 +49,7 @@ router.post('/api/login', function(req, res, next) {
     passport.authenticate('login', function(err, user, info) {
         if (err) return next(err);
         if (!user || info) {
-            res.json({result: 'false', msg: info.msg});
+            return res.json({result: 'false', msg: info.msg});
         }
         
         // Login
@@ -58,6 +58,11 @@ router.post('/api/login', function(req, res, next) {
             res.json({result: 'success'});
         });
     })(req, res, next);
+});
+
+router.get('/api/logout', function(req, res, next) {
+    req.logout();
+    res.redirect("/");
 });
 
 module.exports = router;
