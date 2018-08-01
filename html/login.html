@@ -51,7 +51,7 @@
             </form>
             <div class="ui message">
                 New to us?
-                <a href="/signup">Sign Up</a>
+                <a href="/signup.html">Sign Up</a>
             </div>
         </div>
     </div>
@@ -68,7 +68,7 @@
                     success: function(data) {
                         if(data.result == "success") {
                             //alert("로그인 성공");
-                            location.href = "/";
+                            location.href = "/chat.html";
                         } else {
                             if(data.msg) alert(data.msg);
                             return;

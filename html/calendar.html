@@ -1,0 +1,97 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="/libs/semantic/semantic.min.css"  media="screen,projection"/>
+	<link rel="stylesheet" type="text/css" href="/libs/fullcalendar/fullcalendar.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Calendar</title>
+</head>
+<body>
+    <div class="ui middle aligned center aligned grid">
+        <div id='calendar'></div>
+    </div>
+    <script src="/libs/jquery/jquery-3.3.1.min.js"></script>
+    <script src="/libs/semantic/semantic.min.js"></script>
+	<script src="/libs/moment/moment.js"></script>
+	<script src="/libs/fullcalendar/fullcalendar.min.js"></script>
+	<script src="/libs/fullcalendar/ko.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#calendar').fullCalendar({
+				contentHeight: 700,
+				locale: 'ko',
+				buttonIcons: false, // show the prev/next text
+				eventLimit: true, // allow "more" link when too many events,
+				editable: true,
+				header: {
+					left: 'prev,next today',
+					center: 'title',
+					right: 'month,agendaWeek,agendaDay,listMonth'
+				},
+				dayClick: function(date, jsEvent, view) {
+					console.log('dayClick', date.format());
+				},
+				eventClick: function(eventObj) {
+					console.log('eventClick', eventObj);
+				},
+				eventDrop: function(event, delta, revertFunc) {
+					console.log(event.title + " was dropped on " + event.start.format(), event);
+				},
+				events: [
+					{
+					  title: 'All Day Event',
+					  start: '2018-07-01'
+					},
+					{
+					  title: 'Long Event',
+					  start: '2018-07-07',
+					  end: '2018-07-10',
+					  color: 'purple' // override!
+					},
+					{
+					  id: 999,
+					  title: 'Repeating Event',
+					  start: '2018-07-09T16:00:00'
+					},
+					{
+					  id: 999,
+					  title: 'Repeating Event',
+					  start: '2018-07-16T16:00:00'
+					},
+					{
+					  title: 'Conference',
+					  start: '2018-07-11',
+					  end: '2018-07-13',
+					  color: 'purple' // override!
+					},
+					{
+					  title: 'Meeting',
+					  start: '2018-07-12T10:30:00',
+					  end: '2018-07-12T12:30:00'
+					},
+					{
+					  title: 'Lunch',
+					  start: '2018-07-12T12:00:00'
+					},
+					{
+					  title: 'Meeting',
+					  start: '2018-07-12T14:30:00'
+					},
+					{
+					  title: 'Birthday Party',
+					  start: '2018-07-13T07:00:00'
+					},
+					{
+					  title: 'Click for Google',
+					  url: 'http://google.com/',
+					  start: '2018-07-28'
+					}
+				]
+			});
+        });
+    </script>
+</body>
+</html>

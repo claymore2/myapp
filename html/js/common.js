@@ -1,6 +1,6 @@
 var myFunc;
 // Socket.io Client
-var socket = io();
+var socket = io('http://localhost/socket.io');
 
 myFunc = (function($) {
     return {

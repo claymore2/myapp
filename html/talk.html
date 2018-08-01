@@ -8,7 +8,7 @@
     <link type="text/css" rel="stylesheet" href="/libs/jquery-scrollbar/jquery.mCustomScrollbar.min.css"  media="screen,projection"/>
     <link type="text/css" rel="stylesheet" href="/css/common.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Index</title>
+    <title>Talk</title>
 </head>
 <body>
     <div class="ui container" style="margin-top: 60px;">
@@ -105,7 +105,7 @@
                         <a class="header">Helen</a>
                         <div class="description">상태메시지</div>
                     </div>
-                </div>                 
+                </div>
             </div>
         </div>
         <div class="ui divider"></div>
@@ -172,7 +172,7 @@
 
             myFunc.getLoginUser(function(user) {
                 html += '<div class="content">';
-                html +=     '<img class="right floated ui avatar image" src="/images/avatar/default.png">';                       
+                html +=     '<img class="right floated ui avatar image" src="/images/avatar/default.png">';
                 html +=     '<div class="header">'+user.name+'</div>';
                 html +=     '<div class="meta">'+user.email+'</div>';
                 html +=     '<div class="description">상태메시지</div>';
@@ -186,12 +186,12 @@
 
         function openUserListModal() {
             var html = '';
-            
+
             apiUsers.list(function(data) {
                 $.each(data, function(i, item) {
                     if(loginUser._id != item._id) {
                         html += '<div class="item" data-uid="'+item['_id']+'" onclick="addSelectedUser(this);">';
-                        html +=     '<img class="ui avatar image" src="/images/avatar/default.png">';                       
+                        html +=     '<img class="ui avatar image" src="/images/avatar/default.png">';
                         html +=     '<div class="content">';
                         html +=         '<a class="header name">'+item['NAME']+'</a>';
                         html +=         '<div class="description">상태메시지</div>';
@@ -210,11 +210,11 @@
             var uid = $(obj).data('uid');
             var name = $(obj).find('.name').text();
             var avatar = $(obj).find('.avatar').attr('src');
-            
+
             if(selectedUsers.indexOf(uid) < 0) {
                 var html = '';
                 html += '<div class="ui image label" style="margin:3px;">';
-                html +=     '<img src="'+avatar+'">'+name+' <i class="icon close"></i>';                       
+                html +=     '<img src="'+avatar+'">'+name+' <i class="icon close"></i>';
                 html += '</div>';
 
                 var $new = $(html);
@@ -222,14 +222,14 @@
                 //$(obj).hide('normal').remove();
                 $new.hide().appendTo($selectedUserLabels).fadeIn('fast');
                 selectedUsers.push(uid);
-                //console.log("added:", selectedUsers); 
+                //console.log("added:", selectedUsers);
 
                 // Delete Event
                 $new.find(".icon.close").on("click", function() {
                     //$(obj).show('normal');
                     //$(obj).appendTo($userList).show('normal');
                     $new.hide('normal').remove();
-                    selectedUsers = selectedUsers.filter(function(item) { 
+                    selectedUsers = selectedUsers.filter(function(item) {
                         return item !== uid;
                     });
                     //console.log("deleted:", selectedUsers);
@@ -271,7 +271,7 @@
                     html += '<div class="item" data-room-id="'+room['ROOM_ID']+'" onclick="openRoom(this);">';
                     html +=     '<span class="ui right floated">'+roomDate+'</span>';
                     html +=     '<div class="content" style="width:100%;">';
-                    html +=     '<img class="ui left floated avatar image" src="/images/avatar/default.png">';          
+                    html +=     '<img class="ui left floated avatar image" src="/images/avatar/default.png">';
                     html +=         '<a class="header">'+roomName+' ('+roomMembers.length+')</a>';
                     html +=         '<div class="description">';
                     if(unreadMsgCnt > 0) {
@@ -360,7 +360,7 @@
                 html +=         '</div>';
                 html +=     '</div>';
                 html += '</div>';
-                
+
                 $chat = $(html);
                 $chat.find(".chatInner").addClass(from);
                 if(from == 'fromOther') {
@@ -398,7 +398,7 @@
 
             // 채팅방 리스트
             getRoomList();
-            
+
             // roomId 가 존재하면 채팅방 리스트 불러온 후 선택
             // var roomId = myFunc.getUrlVars()['roomId'];
             // if(roomId) {
@@ -407,8 +407,8 @@
             // } else {
             //     getRoomList();
             // }
-            
-                
+
+
             $userListModal.modal({
                 onApprove : function() {
                     inviteUsers();
