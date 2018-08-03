@@ -4,6 +4,12 @@ html, body {
     height: 100%;
 }
 
+.container {
+    padding-top: 60px !important;
+}
+
+/* 달력 라벨 팝업 */
+#popLabel a.ui.label {margin-bottom:10px}
 
 /* 채팅 룸 */
 #messagesWrapper {height:600px}

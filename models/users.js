@@ -8,7 +8,7 @@ var userSchema = mongoose.Schema({
     //REG_DT: {type : Date, default: Date.now},
     //UDT_DT: {type : Date, default: Date.now}
     REG_DT: {type : Number, default: new Date().getTime()},
-    UDT_DT: {type : Number, default: new Date().getTime()}
+    UDT_DT: {type : Number, default: new Date().getTime()},
 });
 
 // password를 암호화
