@@ -18,7 +18,7 @@
 	</div>
 	<!-- 일정 추가 -->
 	<div id="addEventModal" class="ui modal" style="width:700px;">
-		<div class="header">
+		<div class="header modal-header">
 			새 일정
 		</div>
 		<div class="content">
@@ -100,10 +100,45 @@
 			</div>
 		</div>
 	</div>
+	<!-- 설정 창 -->
+	<div id="settings" class="ui modal" style="width:700px;">
+		<div class="header modal-header">
+			설정
+		</div>
+		<div class="content">
+			<form class="ui form">
+				<h4>라벨 설정</h4>
+				<div class="fields">
+					<div class="inline six wide field">
+						<div class="ui icon input">
+							<input type="text" id="labelName" placeholder="라벨 이름">
+							<input type="hidden" id="labelColor">
+							<i id="btnLabelColor" class="circle icon link"></i>
+						</div>
+					</div>
+					<div class="inline field">
+						<button class="ui button">저장</button>
+					</div>
+				</div>
+				<!-- <div class="ui divider"></div> -->
+			</form>
+		</div>
+		<div class="actions">
+			<div id="btnCancel" class="ui black deny button">
+				Cancel
+			</div>
+			<div id="btnAddEvent" class="ui primary right labeled icon button">
+				Save
+				<i class="checkmark icon"></i>
+			</div>
+		</div>
+	</div>
 	<!-- 라벨 추가 팝업 -->
 	<div id="popLabel" class="ui fluid popup hidden">
 		<h5 class="ui header">라벨</h5>
 	</div>
+	<!-- 라벨 컬러 팝업 -->
+	<div id="popLabelColor" class="ui popup hidden"></div>
 	<script src="/libs/jquery/jquery-3.3.1.min.js"></script>
 	<script src="/libs/semantic/semantic.min.js"></script>
 	<script src="/libs/semantic-calendar/calendar.min.js"></script>
@@ -153,6 +188,13 @@
 			});
 		}
 
+		function setLabelColors(labelArr) {
+			$("#popLabelColor").empty();
+			$.each(labelArr, function(i, v) {
+				$("#popLabelColor").append("<a class='ui label empty circular "+v.color+"' data-color='"+v.color+"'></a>");
+			});
+		}
+
 		function resetEventModal() {
 			$("input[name=eventId]").val("");
 			$("input[name=title]").val("");
@@ -175,7 +217,7 @@
 			$("#addEventModal").modal('show');
 
 			if(insertType == "I") {
-				$("#addEventModal .header").text("새 일정");
+				$("#addEventModal .modal-header").text("새 일정");
 				// 버튼 클릭으로 들어왔을 때
 				if(!data) {
 					data = {};
@@ -187,7 +229,7 @@
 				$("input[name=endDateTxt]").val(data.endDate.add(-1, 'd').format('YYYY-MM-DD'));
 				$("input[name=endTimeTxt]").val(moment(today).add(1, 'h').format('k')+":00");
 			} else {
-				$("#addEventModal .header").text("일정 수정");
+				$("#addEventModal .modal-header").text("일정 수정");
 				$("input[name=eventId]").val(data.id);
 				$("input[name=title]").val(data.title);
 				$("input[name=startDateTxt]").val(data.start.format('YYYY-MM-DD'));
@@ -238,7 +280,6 @@
 
 		function getEvents(callback) {
 			var calDate = $calendar.fullCalendar('getDate');
-			//var monthRange = getMonthRange(calDate);
 			//console.log("getEvents", calDate, monthRange);
 			var sData = {};
 			sData.uid = "5acc5634541c561ddc5888cf";
@@ -315,20 +356,25 @@
 			});
 		}
 
-		function getMonthRange(date) {
-			var d;
-			if(date) {
-				d = new Date(date);
-			} else {
-				d = new Date();
-			}
-			var sDate = new Date(d.getFullYear(),d.getMonth(), 1);
-			var eDate = new Date(d.getFullYear(),d.getMonth()+1, 1);
-			return {
-				sDate: sDate,
-				eDate: eDate
-			}
+		function openSettings() {
+			$("#settings").modal('show');
+			// 라벨
+			$('#settings #btnLabelColor').popup({
+				popup : $('#popLabelColor'),
+				on: 'click',
+				inline: true,
+				position: 'bottom right'
+			});
 		}
+
+		// 라벨 색상 선택
+		$(document).on("click", "#popLabelColor a.ui.label", function(e) {
+			var color = $(this).data("color");
+			$("#settings #labelColor").val(color);
+			$("#settings #btnLabelColor").removeClass();
+			$("#settings #btnLabelColor").addClass("circle link icon "+color);
+			$('#settings #btnLabelColor').popup('hide');
+		});
 
 		// 라벨 선택
 		$(document).on("click", "#popLabel a.ui.label", function(e) {
@@ -366,6 +412,7 @@
 			$('.ui.dropdown').dropdown();
 			// Init Labels
 			setLabels(labels);
+			setLabelColors(labels);
 			// Init FullCalendar
 			$calendar = $('#calendar').fullCalendar({
 				//themeSystem: 'bootstrap3',
@@ -376,7 +423,7 @@
 				eventLimit: true, // allow "more" link when too many events,
 				editable: true,
 				header: {
-					left: 'today newEvent',
+					left: 'today newEvent settings',
 					center: 'btnPrev title btnNext',
 					right: 'month,agendaWeek,agendaDay,listMonth'
 				},
@@ -387,45 +434,49 @@
 							openAddEventModal("I");
 						}
 					},
+					settings: {
+						text: '설정',
+						click: function() {
+							openSettings();
+						}
+					},
 					btnPrev: {
 						text: '<',
 						click: function() {
 							$calendar.fullCalendar('prev');
-							//console.log('prev', $calendar.fullCalendar('getDate'));
 						}
 					},
 					btnNext: {
 						text: '>',
 						click: function() {
 							$calendar.fullCalendar('next');
-							//console.log('next', $calendar.fullCalendar('getDate'));
 						}
 					}
 				},
 				dayClick: function (date, jsEvent, view) {
-					console.log('dayClick', date.format());
+					//console.log('dayClick', date.format());
 				},
 				select: function(startDate, endDate) {
-					console.log('selected ' + startDate.format() + ' to ' + endDate.format());
+					//console.log('selected ' + startDate.format() + ' to ' + endDate.format());
 					openAddEventModal("I", {
 						startDate: startDate,
 						endDate: endDate
 					});
 				},
 				eventClick: function (eventObj) {
-					console.log('eventClick', eventObj);
+					//console.log('eventClick', eventObj);
 					openAddEventModal("U", eventObj);
 				},
 				eventDrop: function (event, delta, revertFunc) {
-					console.log(event.title + " was dropped on " + event.start.format(), event);
+					//console.log(event.title + " was dropped on " + event.start.format(), event);
 				}
 			});
 
 			// Get Events
 			getEvents(function(events) {
 				$calendar.fullCalendar('addEventSource', events);
-				var clientEvents = $calendar.fullCalendar('clientEvents');
-				console.log("clientEvents", clientEvents);
+				//var clientEvents = $calendar.fullCalendar('clientEvents');
+				//console.log("clientEvents", clientEvents);
 			});
 		});
 	</script>

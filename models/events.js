@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 
 var eventSchema = mongoose.Schema({
-    USER_ID: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    USER: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     TITLE: String,
     START: String,
     END: String,

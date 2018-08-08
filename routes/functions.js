@@ -140,6 +140,20 @@ function removeArrayDuplicate(array) {
     return array;
 }
 
+//각언어설정에 맞는 메세지
+function fMsg(num, lan) {
+    var strSet = {}
+    strSet['ko-KR'] = [
+        '유저 정보가 없습니다.',
+        '요청하신 작업을 실행할 수 없습니다.',
+        '요청하신 작업을 실행하였습니다.',
+        '요청하신 작업의 실행 권한이 없습니다.',
+        '이 글은 관리자에 의해 블라인드 처리 되었습니다.',
+        '이 댓글은 관리자에 의해 블라인드 처리 되었습니다.',
+    ]
+    return strSet[lan][num];
+}
+
 module.exports = {
     fnDb: fnDb,
     isLoggedIn: isLoggedIn,
@@ -148,5 +162,6 @@ module.exports = {
     strToObjectId: strToObjectId,
     objectIdToStr: objectIdToStr,
     arraySort: arraySort,
-    removeArrayDuplicate: removeArrayDuplicate
+    removeArrayDuplicate: removeArrayDuplicate,
+    fMsg: fMsg
 }

@@ -13,9 +13,18 @@ router.post('/api/events', function(req, res, next) {
         if(user) {
             logger.info('[/api/events]', uid);
             Event.find({
-                'USER_ID': user._id
-            }, function(err, events) {
-                res.json(events);
+                'USER': user._id
+            })
+            .populate('USER')
+            .exec(function(err, events) {
+                if (err) {
+                    logger.error("saveEvent: ", err);
+                    return res.json({
+                        'result': 'fail',
+                        'msg': fn.fMsg(1, 'ko-KR')
+                    });
+                }
+                return res.json(events);
             });
         } else {
             res.json(null);
@@ -35,12 +44,12 @@ router.post('/api/event/mod', function(req, res, next) {
             var sDate = formData.startDateTxt;
             var eDate = formData.endDateTxt;
             var allDayYn = formData.allDayYn;
-            logger.info('[/api/event/mod] eventId, sDate, eDate ', eventId, sDate, eDate);
+            //logger.info('[/api/event/mod] eventId, sDate, eDate ', eventId, sDate, eDate);
             if(allDayYn == "Y") {
                 eDate = moment(eDate).add(1, 'd').format('YYYY-MM-DD');
             }
 
-            sData['USER_ID'] = user._id;
+            sData['USER'] = user._id;
             sData['TITLE'] = formData.title;
             sData['ALLDAY_YN'] = allDayYn;
             sData['START'] = sDate;
@@ -58,8 +67,8 @@ router.post('/api/event/mod', function(req, res, next) {
             sData['END_UNIX'] = new Date(eDate).getTime();
 
             if(!fn.isEmpty(formData.label)) sData['LABEL'] = formData.label;
-            if(!fn.isEmpty(formData.label)) sData['MEMO'] = formData.memo;
-            if(!fn.isEmpty(formData.label)) sData['PLACE'] = formData.place;
+            if(!fn.isEmpty(formData.memo)) sData['MEMO'] = formData.memo;
+            if(!fn.isEmpty(formData.place)) sData['PLACE'] = formData.place;
             // 신규 이벤트
             if(fn.isEmpty(eventId)) {
                 var newEvent = new Event(sData);
@@ -68,9 +77,10 @@ router.post('/api/event/mod', function(req, res, next) {
                         logger.error("saveEvent: ", err);
                         return res.json({
                             'result': 'fail',
-                            'msg': '작업 중 오류가 발생하였습니다.'
+                            'msg': fn.fMsg(1, 'ko-KR')
                         });
                     }
+                    logger.info('[/api/event/mod] new event saved', fn.objectIdToStr(newEvent._id));
                     res.json({
                         'result': 'success',
                         'msg': '이벤트가 등록되었습니다.'
@@ -89,9 +99,10 @@ router.post('/api/event/mod', function(req, res, next) {
                         logger.error("saveEvent: ", err);
                         return res.json({
                             'result': 'fail',
-                            'msg': '작업 중 오류가 발생하였습니다.'
+                            'msg': fn.fMsg(1, 'ko-KR')
                         });
                     }
+                    logger.info('[/api/event/mod] event modified', eventId, sData, rst);
                     res.json({
                         'result': 'success',
                         'msg': '이벤트가 수정되었습니다.'
@@ -101,7 +112,7 @@ router.post('/api/event/mod', function(req, res, next) {
         } else {
             res.json({
                 'result': 'fail',
-                'msg': '유저 정보가 없습니다.'
+                'msg': fn.fMsg(0, 'ko-KR')
             });
         }
     });
