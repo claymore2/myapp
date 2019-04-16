@@ -57,11 +57,22 @@ app.use(bodyParser.json());
 //const flash = require('connect-flash');
 //app.use(flash());
 
+// CORS for Angular
+const cors = require('cors')
+var corsOptions = {
+  origin: 'http://localhost:4200',
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204 
+}
+app.use(cors(corsOptions));
+
 // Routes
 app.use(routes);
 app.use(require('./routes/restUsers'));
 app.use(require('./routes/restChats'));
 app.use(require('./routes/restEvents'));
+app.use(require('./routes/restTest'));
+app.use(require('./routes/restDuties'));
+app.use(require('./routes/restTodos'));
 
 app.use((req, res, next) => { // 404 처리 부분
     res.status(404).send('일치하는 주소가 없습니다');

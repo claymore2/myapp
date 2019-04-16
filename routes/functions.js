@@ -154,6 +154,13 @@ function fMsg(num, lan) {
     return strSet[lan][num];
 }
 
+function fObjectMerge() {
+    for (var i = 1; i < arguments.length; i++)
+        for (var a in arguments[i])
+        arguments[0][a] = arguments[i][a];
+    return arguments[0];
+}
+
 module.exports = {
     fnDb: fnDb,
     isLoggedIn: isLoggedIn,
@@ -163,5 +170,6 @@ module.exports = {
     objectIdToStr: objectIdToStr,
     arraySort: arraySort,
     removeArrayDuplicate: removeArrayDuplicate,
-    fMsg: fMsg
+    fMsg: fMsg,
+    fObjectMerge: fObjectMerge
 }

@@ -1,0 +1,484 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="/libs/semantic/semantic.min.css" />
+	<!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.4/semantic.min.css" rel="stylesheet" type="text/css" /> -->
+	<link rel="stylesheet" type="text/css" href="/libs/semantic-calendar/calendar.min.css">
+	<link rel="stylesheet" type="text/css" href="/libs/fullcalendar/fullcalendar.min.css">
+	<link rel="stylesheet" type="text/css" href="/css/common.css" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Calendar</title>
+</head>
+<body>
+	<div class="ui container">
+		<div id="calendar"></div>
+	</div>
+	<!-- 일정 추가 -->
+	<div id="addEventModal" class="ui modal" style="width:700px;">
+		<div class="header modal-header">
+			새 일정
+		</div>
+		<div class="content">
+			<form class="ui form">
+				<input type="hidden" name="eventId">
+				<div class="fields">
+					<div class="twelve wide field">
+						<!-- <label>일정 제목</label> -->
+						<input type="text" name="title" placeholder="제목">
+					</div>
+					<div class="four wide field">
+						<div class="ui icon input">
+							<input type="text" id="labelText" placeholder="라벨" readonly>
+							<input type="hidden" name="label">
+							<i id="btnLabel" class="circle icon"></i>
+						</div>
+					</div>
+				</div>
+				<div class="field">
+					<div class="ui toggle checkbox">
+						<input type="checkbox" id="allDayChk" tabindex="0" class="hidden">
+						<input type="hidden" name="allDayYn">
+						<label>하루 종일</label>
+					</div>
+				</div>
+				<div class="fields">
+					<div class="five wide field">
+						<div class="ui calendar" id="startDate">
+							<div class="ui input icon">
+								<input type="text" name="startDateTxt" placeholder="시작 날짜" readonly>
+								<i class="calendar alternate outline icon"></i>
+							</div>
+						</div>
+					</div>
+					<div class="three wide field">
+						<div class="ui calendar" id="startTime">
+							<div class="ui input icon">
+								<input type="text" name="startTimeTxt" placeholder="시작 시간" readonly>
+								<i class="time icon"></i>
+							</div>
+						</div>
+					</div>
+					<span style="line-height:34px;vertical-align:middle;">~</span>
+					<div class="five wide field">
+						<div class="ui calendar" id="endDate">
+							<div class="ui input icon">
+								<input type="text" name="endDateTxt" placeholder="종료 날짜" readonly>
+								<i class="calendar alternate outline icon"></i>
+							</div>
+						</div>
+					</div>
+					<div class="three wide field">
+						<div class="ui calendar" id="endTime">
+							<div class="ui input icon">
+								<input type="text" name="endTimeTxt" placeholder="종료 시간" readonly>
+								<i class="time icon"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="field">
+					<textarea rows="3" name="memo" placeholder="메모"></textarea>
+				</div>
+				<div class="field">
+					<div class="ui input icon">
+						<input type="text" name="place" placeholder="장소">
+						<i class="map marker alternate link icon"></i>
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="actions">
+			<div id="btnCancel" class="ui black deny button">
+				Cancel
+			</div>
+			<div id="btnAddEvent" class="ui primary right labeled icon button">
+				Save
+				<i class="checkmark icon"></i>
+			</div>
+		</div>
+	</div>
+	<!-- 설정 창 -->
+	<div id="settings" class="ui modal" style="width:700px;">
+		<div class="header modal-header">
+			설정
+		</div>
+		<div class="content">
+			<form class="ui form">
+				<h4>라벨 설정</h4>
+				<div class="fields">
+					<div class="inline six wide field">
+						<div class="ui icon input">
+							<input type="text" id="labelName" placeholder="라벨 이름">
+							<input type="hidden" id="labelColor">
+							<i id="btnLabelColor" class="circle icon link"></i>
+						</div>
+					</div>
+					<div class="inline field">
+						<button class="ui button">저장</button>
+					</div>
+				</div>
+				<!-- <div class="ui divider"></div> -->
+			</form>
+		</div>
+		<div class="actions">
+			<div id="btnCancel" class="ui black deny button">
+				Cancel
+			</div>
+			<div id="btnAddEvent" class="ui primary right labeled icon button">
+				Save
+				<i class="checkmark icon"></i>
+			</div>
+		</div>
+	</div>
+	<!-- 라벨 추가 팝업 -->
+	<div id="popLabel" class="ui fluid popup hidden">
+		<h5 class="ui header">라벨</h5>
+	</div>
+	<!-- 라벨 컬러 팝업 -->
+	<div id="popLabelColor" class="ui popup hidden"></div>
+	<script src="/libs/jquery/jquery-3.3.1.min.js"></script>
+	<script src="/libs/semantic/semantic.min.js"></script>
+	<script src="/libs/semantic-calendar/calendar.min.js"></script>
+	<script src="/libs/moment/moment.js"></script>
+	<script src="/libs/fullcalendar/fullcalendar.min.js"></script>
+	<script src="/libs/fullcalendar/ko.js"></script>
+	<script src="/libs/jquery.serializeObject.js"></script>
+	<script>
+		var $calendar;
+		var today = new Date();
+		var calDateFormat = {
+			date: function (date, settings) {
+				if (!date) return '';
+				return moment(date).format('YYYY-MM-DD');
+			}
+		}
+		var labels = [
+			{"id":"1", "text":"Red", "color":"red"},
+			{"id":"2", "text":"Orange", "color":"orange"},
+			{"id":"3", "text":"Yellow", "color":"yellow"},
+			{"id":"4", "text":"Olive", "color":"olive"},
+			{"id":"5", "text":"Green", "color":"green"},
+			{"id":"6", "text":"Teal", "color":"teal"},
+			{"id":"7", "text":"Blue", "color":"blue"},
+			{"id":"8", "text":"Violet", "color":"violet"},
+			{"id":"9", "text":"Purple", "color":"purple"},
+			{"id":"10", "text":"Pink", "color":"pink"},
+			{"id":"11", "text":"Brown", "color":"brown"},
+			{"id":"12", "text":"Grey", "color":"grey"},
+			{"id":"13", "text":"Black", "color":"black"}
+		]
+
+		function getLabel(labelId) {
+			var label = labels.filter(function(x) {return x.id == labelId});
+			if(label.length > 0) {
+				return label[0];
+			} else {
+				return null;
+			}
+		}
+
+		function setLabels(labelArr) {
+			$("#popLabel").empty();
+			$("#popLabel").append("<h5 class='ui header'>라벨</h5>");
+			$.each(labelArr, function(i, v) {
+				$("#popLabel").append("<a class='ui label "+v.color+"' data-id='"+v.id+"'>"+v.text+"</a>");
+			});
+		}
+
+		function setLabelColors(labelArr) {
+			$("#popLabelColor").empty();
+			$.each(labelArr, function(i, v) {
+				$("#popLabelColor").append("<a class='ui label empty circular "+v.color+"' data-color='"+v.color+"'></a>");
+			});
+		}
+
+		function resetEventModal() {
+			$("input[name=eventId]").val("");
+			$("input[name=title]").val("");
+			$("#labelText").val("");
+			$("#addEventModal #btnLabel").removeClass();
+			$("#addEventModal #btnLabel").addClass("circle icon");
+			$("input[name=label]").val("");
+			$("input[name=startDateTxt]").val("");
+			$("input[name=startTimeTxt]").val("");
+			$("input[name=endDateTxt]").val("");
+			$("input[name=endTimeTxt]").val("");
+			$("#addEventModal .ui.checkbox").checkbox("uncheck");
+			$("input[name=allDayYn]").val("N");
+			$("textarea[name=memo]").val("");
+			$("input[name=place]").val("");
+		}
+
+		function openAddEventModal(insertType, data) {
+			resetEventModal();
+			$("#addEventModal").modal('show');
+
+			if(insertType == "I") {
+				$("#addEventModal .modal-header").text("새 일정");
+				// 버튼 클릭으로 들어왔을 때
+				if(!data) {
+					data = {};
+					data.startDate = moment(today);
+					data.endDate = moment(today).add(1, 'd');
+				}
+				$("input[name=startDateTxt]").val(data.startDate.format('YYYY-MM-DD'));
+				$("input[name=startTimeTxt]").val(moment(today).format('k')+":00");
+				$("input[name=endDateTxt]").val(data.endDate.add(-1, 'd').format('YYYY-MM-DD'));
+				$("input[name=endTimeTxt]").val(moment(today).add(1, 'h').format('k')+":00");
+			} else {
+				$("#addEventModal .modal-header").text("일정 수정");
+				$("input[name=eventId]").val(data.id);
+				$("input[name=title]").val(data.title);
+				$("input[name=startDateTxt]").val(data.start.format('YYYY-MM-DD'));
+				$("input[name=startTimeTxt]").val(data.start.format('k:mm'));
+				$("input[name=endTimeTxt]").val(data.end.format('k:mm'));
+				if(data.allDayYn == "Y") {
+					// 보여줄 때는 하루 전 날로 보여줌
+					$("input[name=endDateTxt]").val(data.end.add(-1, 'd').format('YYYY-MM-DD'));
+					$("#addEventModal .ui.checkbox").checkbox("check");
+					$("input[name=allDayYn]").val("Y");
+				} else {
+					$("input[name=endDateTxt]").val(data.end.format('YYYY-MM-DD'));
+				}
+				if(data.label && data.label != "") {
+					$("input[name=label]").val(data.label);
+					$("#labelText").val(data.labelText);
+					$("#addEventModal #btnLabel").removeClass();
+					$("#addEventModal #btnLabel").addClass("circle icon "+data.color);
+				}
+				$("textarea[name=memo]").val(data.memo);
+				$("input[name=place]").val(data.place);
+			}
+
+			$('#startDate').calendar({
+				type: 'date',
+				formatter: calDateFormat
+			});
+			$('#startTime').calendar({
+				type: 'time',
+				ampm: false
+			});
+			$('#endDate').calendar({
+				type: 'date',
+				formatter: calDateFormat
+			});
+			$('#endTime').calendar({
+				type: 'time',
+				ampm: false
+			});
+			// 라벨
+			$('#addEventModal #labelText').popup({
+				popup : $('#popLabel'),
+				on: 'focus',
+				inline: true,
+				position: 'bottom right'
+			});
+		}
+
+		function getEvents(callback) {
+			var calDate = $calendar.fullCalendar('getDate');
+			//console.log("getEvents", calDate, monthRange);
+			var sData = {};
+			sData.uid = "5acc5634541c561ddc5888cf";
+			$.ajax({
+				type: "POST",
+				data: sData,
+				url: "/api/events",
+				dataType: "json",
+				error: function (err) {
+					console.log(err);
+					alert("작업 중 오류가 발생하였습니다.");
+				},
+				success: function (data) {
+					//console.log(data);
+					var events = [];
+					$.each(data, function(i, v) {
+						var event = {};
+						if(v.LABEL && v.LABEL != "") {
+							var label = getLabel(v.LABEL);
+							event.label = label.id;
+							event.labelText = label.text;
+							event.color = label.color;
+						}
+						event.id = v._id;
+						event.title = v.TITLE;
+						event.start = v.START;
+						event.end = v.END;
+						event.allDayYn = v.ALLDAY_YN;
+						event.memo = v.MEMO;
+						event.place = v.PLACE;
+						events.push(event);
+					});
+					//console.log("events", events);
+					if(callback) callback(events);
+				}
+			});
+		}
+
+		function saveEvent(callback) {
+			var title = $.trim($("input[name=title]").val());
+			if(title.length == 0) {
+				alert("제목을 입력해 주세요.");
+				return false;
+			}
+
+			var formData = $("#addEventModal .ui.form").serializeObject();
+			//console.log(formData);
+			var sData = {};
+			sData.uid = "5acc5634541c561ddc5888cf";
+			sData.formData = JSON.stringify(formData);
+
+			$.ajax({
+				type: "POST",
+				data: sData,
+				url: "/api/event/mod",
+				dataType: "json",
+				error: function (err) {
+					console.log(err);
+					alert("작업 중 오류가 발생하였습니다.");
+				},
+				success: function (data) {
+					if(data.result == "success") {
+						$("#addEventModal").modal('hide');
+						getEvents(function(events) {
+							$calendar.fullCalendar('removeEvents');
+							$calendar.fullCalendar('addEventSource', events);
+							//var clientEvents = $calendar.fullCalendar('clientEvents');
+							//console.log("clientEvents", clientEvents);
+						});
+					} else {
+						alert("작업 중 오류가 발생하였습니다.");
+					}
+				}
+			});
+		}
+
+		function openSettings() {
+			$("#settings").modal('show');
+			// 라벨
+			$('#settings #btnLabelColor').popup({
+				popup : $('#popLabelColor'),
+				on: 'click',
+				inline: true,
+				position: 'bottom right'
+			});
+		}
+
+		// 라벨 색상 선택
+		$(document).on("click", "#popLabelColor a.ui.label", function(e) {
+			var color = $(this).data("color");
+			$("#settings #labelColor").val(color);
+			$("#settings #btnLabelColor").removeClass();
+			$("#settings #btnLabelColor").addClass("circle link icon "+color);
+			$('#settings #btnLabelColor').popup('hide');
+		});
+
+		// 라벨 선택
+		$(document).on("click", "#popLabel a.ui.label", function(e) {
+			var labelId = $(this).data("id");
+			var label = getLabel(labelId);
+			//console.log("label", labelId, label);
+			$("#addEventModal #labelText").val(label.text);
+			$("#addEventModal input[name=label]").val(label.id);
+			$("#addEventModal #btnLabel").removeClass();
+			$("#addEventModal #btnLabel").addClass("circle icon "+label.color);
+		});
+
+		// 하루 종일
+		$(document).on("change", "#allDayChk", function(e) {
+			//console.log("allDayYn", $(this).is(":checked"));
+			var allDayYn = $(this).is(":checked") ? "Y" : "N";
+			$("#addEventModal input[name=allDayYn]").val(allDayYn);
+			if(allDayYn == "Y") {
+				$("#addEventModal input[name=startTimeTxt]").prop("disabled", true);
+				$("#addEventModal input[name=endTimeTxt]").prop("disabled", true);
+			} else {
+				$("#addEventModal input[name=startTimeTxt]").prop("disabled", false);
+				$("#addEventModal input[name=endTimeTxt]").prop("disabled", false);
+			}
+		});
+
+		// 이벤트 저장
+		$(document).on("click", "#btnAddEvent", function(e) {
+			saveEvent();
+		});
+
+		$(document).ready(function () {
+			// Init Semantic ui
+			$('.ui.checkbox').checkbox();
+			$('.ui.dropdown').dropdown();
+			// Init Labels
+			setLabels(labels);
+			setLabelColors(labels);
+			// Init FullCalendar
+			$calendar = $('#calendar').fullCalendar({
+				//themeSystem: 'bootstrap3',
+				contentHeight: 700,
+				locale: 'ko',
+				selectable: true,
+				buttonIcons: true, // show the prev/next text
+				eventLimit: true, // allow "more" link when too many events,
+				editable: true,
+				header: {
+					left: 'today newEvent settings',
+					center: 'btnPrev title btnNext',
+					right: 'month,agendaWeek,agendaDay,listMonth'
+				},
+				customButtons: {
+					newEvent: {
+						text: '새 일정',
+						click: function() {
+							openAddEventModal("I");
+						}
+					},
+					settings: {
+						text: '설정',
+						click: function() {
+							openSettings();
+						}
+					},
+					btnPrev: {
+						text: '<',
+						click: function() {
+							$calendar.fullCalendar('prev');
+						}
+					},
+					btnNext: {
+						text: '>',
+						click: function() {
+							$calendar.fullCalendar('next');
+						}
+					}
+				},
+				dayClick: function (date, jsEvent, view) {
+					//console.log('dayClick', date.format());
+				},
+				select: function(startDate, endDate) {
+					//console.log('selected ' + startDate.format() + ' to ' + endDate.format());
+					openAddEventModal("I", {
+						startDate: startDate,
+						endDate: endDate
+					});
+				},
+				eventClick: function (eventObj) {
+					//console.log('eventClick', eventObj);
+					openAddEventModal("U", eventObj);
+				},
+				eventDrop: function (event, delta, revertFunc) {
+					//console.log(event.title + " was dropped on " + event.start.format(), event);
+				}
+			});
+
+			// Get Events
+			getEvents(function(events) {
+				$calendar.fullCalendar('addEventSource', events);
+				//var clientEvents = $calendar.fullCalendar('clientEvents');
+				//console.log("clientEvents", clientEvents);
+			});
+		});
+	</script>
+</body>
+</html>
